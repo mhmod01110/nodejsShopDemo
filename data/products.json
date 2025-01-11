@@ -1,0 +1,15 @@
+[
+    {   "id": "548",
+        "title": "A Book",
+        "imageUrl": "https://www.publicdomainpictures.net/pictures/10000/velka/1-1210009435EGmE.jpg",
+        "description": "This is an awesome book!",
+        "price": "19"
+    },
+    {
+        "id": "1458",
+        "title": "Booky",
+        "imageUrl": "https://npr.brightspotcdn.com/dims4/default/df0ebfd/2147483647/strip/true/crop/1076x823+0+0/resize/880x673!/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2Fa2%2F27%2F21e97c404b2fba8dc2189018f871%2Fbooks-image.jpg",
+        "description": "very good book",
+        "price": "150"
+    }
+]
