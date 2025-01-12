@@ -1,0 +1,20 @@
+{
+    "products": [
+        {
+            "id": "548",
+            "price": "19",
+            "quantity": 2
+        },
+        {
+            "id": "1458",
+            "price": "150",
+            "quantity": 3
+        },
+        {
+            "id": "0.7202178271072055",
+            "price": "500",
+            "quantity": 1
+        }
+    ],
+    "totalPrice": 988
+}
