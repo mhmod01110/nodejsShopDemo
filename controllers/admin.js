@@ -19,8 +19,14 @@ exports.postAddProduct = (req, res, next) => {
     const price = req.body.price;
     const description = req.body.description;
     const product = new Product(title, imageUrl, description, price);
-    product.save();
-    res.redirect("/");
+    product
+        .save()
+        .then(() => {
+            res.redirect("/");
+        })
+        .catch((err) => {
+            console.log(err);
+        });
 };
 
 exports.getEditProduct = (req, res, next) => {
@@ -68,30 +74,29 @@ exports.postEditProduct = (req, res, next) => {
     console.log(prodId);
 };
 
-
 exports.postDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId;
+    const prodId = req.body.productId;
 
-  Product.findByID(prodId, (product) => {
-      if (!product) {
-          console.log(`Product with ID ${prodId} not found.`);
-          return res.redirect("/admin/products");
-      }
+    Product.findByID(prodId, (product) => {
+        if (!product) {
+            console.log(`Product with ID ${prodId} not found.`);
+            return res.redirect("/admin/products");
+        }
 
-      Product.deleteByID(prodId, (success) => {
-          if (success) {
-              console.log(`Product with ID ${prodId} successfully deleted.`);
+        Product.deleteByID(prodId, (success) => {
+            if (success) {
+                console.log(`Product with ID ${prodId} successfully deleted.`);
 
-              // Delete the product from the cart
-              Cart.deleteProduct(prodId, product.price);
+                // Delete the product from the cart
+                Cart.deleteProduct(prodId, product.price);
 
-              res.redirect("/admin/products");
-          } else {
-              console.log(`Failed to delete product with ID ${prodId}.`);
-              res.redirect("/admin/products");
-          }
-      });
-  });
+                res.redirect("/admin/products");
+            } else {
+                console.log(`Failed to delete product with ID ${prodId}.`);
+                res.redirect("/admin/products");
+            }
+        });
+    });
 };
 
 exports.getProducts = (req, res, next) => {
