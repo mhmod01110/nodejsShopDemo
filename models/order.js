@@ -1,13 +1,13 @@
-const Sequelize = require('sequelize');
-const sequelize = require('../util/db');
+// const Sequelize = require('sequelize');
+// const sequelize = require('../util/db');
 
-const Order = sequelize.define('order', {
-    id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        allowNull: false,
-        primaryKey: true,
-    },
-});
+// const Order = sequelize.define('order', {
+//     id: {
+//         type: Sequelize.INTEGER,
+//         autoIncrement: true,
+//         allowNull: false,
+//         primaryKey: true,
+//     },
+// });
 
-module.exports = Order;
+// module.exports = Order;
