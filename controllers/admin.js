@@ -20,12 +20,10 @@ exports.postAddProduct = (req, res, next) => {
     const imageUrl = req.body.imageUrl;
     const description = req.body.description;
     const userId = req.user._id;
-    console.log("user Id : ", userId);
     const product = new Product(title, price, imageUrl, description, null, userId);
     product
         .save()
         .then((result) => {
-            console.log(result);
             res.redirect("/admin/products");
         })
         .catch((err) => {
@@ -97,7 +95,6 @@ exports.postDeleteProduct = (req, res, next) => {
 exports.getProducts = (req, res, next) => {
     Product.fetchAll()
         .then((products) => {
-            console.log("returned products : ", products);
             res.render("admin/products", {
                 prods: products,
                 pageTitle: "Admin Products",

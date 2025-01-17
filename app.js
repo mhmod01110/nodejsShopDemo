@@ -17,15 +17,26 @@ const shopRoutes = require("./routes/shop");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
+
 app.use((req, res, next) => {
-    User.findById("678a661eb389c89329b939bc")
-        .then((user) => {
-            req.user = user;
+    const userId = "678a661eb389c89329b939bc"; // Replace with actual logic to fetch user ID
+    User.findById(userId)
+        .then(userData => {
+            if (userData) {
+                req.user = new User(
+                    userData.name,
+                    userData.email,
+                    userData._id,
+                    userData.cart
+                );
+            } else {
+                req.user = null;
+            }
             next();
         })
-        .catch((err) => {
-            console.log("Error finding user:", err);
-            next(err); // Pass error to Express's error-handling mechanism
+        .catch(err => {
+            console.error("Error fetching user:", err);
+            next();
         });
 });
 

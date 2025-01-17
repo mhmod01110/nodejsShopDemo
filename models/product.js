@@ -19,7 +19,14 @@ class Product {
                 .collection("products")
                 .updateOne(
                     { _id: this._id },
-                    { $set: { title: this.title, price: this.price, imageUrl: this.imageUrl, description: this.description } }
+                    {
+                        $set: {
+                            title: this.title,
+                            price: this.price,
+                            imageUrl: this.imageUrl,
+                            description: this.description,
+                        },
+                    }
                 )
                 .then((result) => {
                     console.log("Updated Product");
@@ -50,7 +57,6 @@ class Product {
             .find()
             .toArray()
             .then((products) => {
-                console.log(products);
                 return products;
             })
             .catch((err) => {
@@ -61,18 +67,24 @@ class Product {
 
     static findbyId(prodId) {
         const db = getDb();
-        return db
-            .collection("products")
-            .find({ _id: new mongodb.ObjectId(prodId) })
-            .next()
-            .then((result) => {
-                return result;
-            })
-            .catch((err) => {
-                console.log(err);
-                return null;
-            });
+        try {
+            const objectId = new mongodb.ObjectId(prodId); // Validate and convert to ObjectId
+            return db
+                .collection("products")
+                .findOne({ _id: objectId })
+                .then((result) => {
+                    return result;
+                })
+                .catch((err) => {
+                    console.error("Error finding product by ID:", err);
+                    return null;
+                });
+        } catch (err) {
+            console.error("Invalid ObjectId format:", err);
+            return Promise.reject("Invalid ObjectId format");
+        }
     }
+    
 
     static delete(prodId) {
         const db = getDb();
