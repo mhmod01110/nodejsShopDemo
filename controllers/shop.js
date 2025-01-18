@@ -3,7 +3,7 @@ const Product = require("../models/product");
 const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
-    Product.fetchAll()
+    Product.find()
         .then((products) => {
             res.render("shop/product-list", {
                 prods: products,
@@ -19,7 +19,7 @@ exports.getProducts = (req, res, next) => {
 exports.getProduct = (req, res, next) => {
     const prodId = req.params.productId;
 
-    Product.findbyId(prodId)
+    Product.findById(prodId)
         .then((product) => {
             if (!product) {
                 return res.status(404).render("404", {
@@ -43,7 +43,7 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-    Product.fetchAll()
+    Product.find()
         .then((products) => {
             res.render("shop/index", {
                 prods: products,
@@ -68,7 +68,7 @@ exports.getCart = (req, res, next) => {
 
 exports.postCart = (req, res, next) => {
     const prodId = req.body.productId;
-    Product.findbyId(prodId) // Find the product by ID
+    Product.findById(prodId) // Find the product by ID
         .then((product) => {
             if (!product) {
                 return res.status(404).json({ message: "Product not found" });

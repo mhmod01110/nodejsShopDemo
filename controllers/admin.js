@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+const mongodb = require("mongodb");
 const Product = require("../models/product");
 // const Cart = require("../models/cart");
 // const User = require("../models/user");
@@ -19,11 +21,17 @@ exports.postAddProduct = (req, res, next) => {
     const price = req.body.price;
     const imageUrl = req.body.imageUrl;
     const description = req.body.description;
-    const userId = req.user._id;
-    const product = new Product(title, price, imageUrl, description, null, userId);
+    const product = new Product({
+        title: title,
+        price: price,
+        imageUrl: imageUrl,
+        description: description,
+        userId: req.user
+    });
     product
         .save()
         .then((result) => {
+            console.log("Product Created");
             res.redirect("/admin/products");
         })
         .catch((err) => {
@@ -37,8 +45,8 @@ exports.getEditProduct = (req, res, next) => {
         return res.redirect("/");
     }
     const prodId = req.params.productId;
-    Product.findbyId(prodId)
-        .then(product => {
+    Product.findById(prodId)
+        .then((product) => {
             if (!product) {
                 return res.redirect("/");
             }
@@ -49,10 +57,10 @@ exports.getEditProduct = (req, res, next) => {
                 productCSS: true,
                 activeAddProduct: true,
                 isEdit: editMode,
-                product: product
+                product: product,
             });
         })
-        .catch(err => {
+        .catch((err) => {
             console.error(err);
             res.redirect("/");
         });
@@ -65,10 +73,17 @@ exports.postEditProduct = (req, res, next) => {
     const updatedPrice = req.body.price;
     const updatedDescription = req.body.description;
 
-    const updatedProduct = new Product(updatedTitle, updatedPrice, updatedImageUrl, updatedDescription, prodId);
-
-    updatedProduct
-        .save()
+    Product.updateOne(
+        { _id: new mongodb.ObjectId(prodId) }, // Filter
+        { // Update
+            $set: {
+                title: updatedTitle,
+                imageUrl: updatedImageUrl,
+                price: updatedPrice,
+                description: updatedDescription,
+            },
+        }
+    )
         .then(() => {
             console.log("Product updated");
             res.redirect("/admin/products");
@@ -81,7 +96,7 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
     const prodId = req.body.productId;
-    Product.delete(prodId)
+    Product.findByIdAndDelete(prodId)
         .then(() => {
             console.log("Product deleted");
             res.redirect("/admin/products");
@@ -93,7 +108,7 @@ exports.postDeleteProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-    Product.fetchAll()
+    Product.find({userId: req.user._id}) // retutn all products
         .then((products) => {
             res.render("admin/products", {
                 prods: products,
