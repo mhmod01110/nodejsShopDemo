@@ -2,12 +2,7 @@ const getDb = require("../util/db").getDb;
 const mongodb = require("mongodb");
 
 class User {
-    constructor(
-        name,
-        email,
-        id = null,
-        cart = { items: [], totalPrice: 0 }
-    ) {
+    constructor(name, email, id = null, cart = { items: [], totalPrice: 0 }) {
         this.name = name;
         this.email = email;
         this._id = id ? new mongodb.ObjectId(id) : null;
@@ -114,6 +109,54 @@ class User {
             });
     }
 
+    addOrder() {
+        const db = getDb();
+        // Create a new order document in the database
+        const order = {
+            userId: this._id,
+            items: this.cart.items,
+            totalPrice: this.cart.totalPrice,
+            date: new Date(),
+        };
+        return db
+            .collection("orders")
+            .insertOne(order)
+            .then(() => {
+                // Clear the cart after the order is placed
+                this.cart = {
+                    items: [],
+                    totalPrice: 0,
+                };
+                console.log("Order placed successfully");
+            })
+            .then(() => {
+                // Update the user's cart in the database
+                return db
+                    .collection("users")
+                    .updateOne(
+                        { _id: this._id },
+                        { $set: { cart: this.cart } }
+                    );
+            })
+            .catch((err) => {
+                console.error("Error placing order:", err);
+            });
+    }
+
+    getOrders() {
+        const db = getDb();
+        return db
+            .collection("orders")
+            .find({ userId: this._id })
+            .toArray()
+            .then((orders) => {
+                console.log("Orders retrieved successfully");
+                return orders;
+            })
+            .catch((err) => {
+                console.error("Error retrieving orders:", err);
+            });
+    }
     deleteItemFromCart(prodId) {
         const db = getDb();
         // Filter out the product to be deleted
