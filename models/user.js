@@ -18,7 +18,6 @@ const userSchema = new Schema({
                     price: { type: Number, required: true },
                     description: String,
                     imageUrl: String,
-                    // Add any other product fields you need
                     _id: { type: Schema.Types.ObjectId, required: true },
                 },
                 quantity: { type: Number, required: true },
@@ -27,10 +26,28 @@ const userSchema = new Schema({
         ],
         totalPrice: { type: Number, default: 0 },
     },
+    orders: [
+        {
+            items: [
+                {
+                    product: {
+                        title: { type: String, required: true },
+                        price: { type: Number, required: true },
+                        description: String,
+                        imageUrl: String,
+                        _id: { type: Schema.Types.ObjectId, required: true },
+                    },
+                    quantity: { type: Number, required: true },
+                    _id: false,
+                },
+            ],
+            totalPrice: { type: Number, required: true },
+            createdAt: { type: Date, default: Date.now },
+        },
+    ],
 });
 
 userSchema.methods.addToCart = function (product) {
-    // Initialize cart if it doesn't exist
     if (!this.cart) {
         this.cart = { items: [], totalPrice: 0 };
     }
@@ -43,11 +60,9 @@ userSchema.methods.addToCart = function (product) {
     let newTotalPrice = this.cart.totalPrice;
 
     if (cartProductIndex >= 0) {
-        // Increment quantity if product exists
         updatedCartItems[cartProductIndex].quantity += 1;
-        newTotalPrice = this.cart.totalPrice + product.price;
+        newTotalPrice += product.price;
     } else {
-        // Add new product if it doesn't exist
         updatedCartItems.push({
             product: {
                 _id: product._id,
@@ -55,11 +70,10 @@ userSchema.methods.addToCart = function (product) {
                 price: product.price,
                 description: product.description,
                 imageUrl: product.imageUrl,
-                // Add any other product fields you want to store
             },
             quantity: 1,
         });
-        newTotalPrice = this.cart.totalPrice + product.price;
+        newTotalPrice += product.price;
     }
 
     this.cart.items = updatedCartItems;
@@ -69,29 +83,40 @@ userSchema.methods.addToCart = function (product) {
 };
 
 userSchema.methods.deleteItemFromCart = function (prodId) {
-    // Filter out the item to be deleted
     const updatedCartItems = this.cart.items.filter(
         (item) => item.product._id.toString() !== prodId.toString()
     );
 
-    // Recalculate the total price using the product price from stored product object
     const updatedTotalPrice = updatedCartItems.reduce(
         (total, item) => total + item.product.price * item.quantity,
         0
     );
 
-    // Update the cart directly on this document
     this.cart.items = updatedCartItems;
     this.cart.totalPrice = updatedTotalPrice;
 
-    // Save the document using Mongoose
-    return this.save()
-        .then(() => {
-            console.log("Product removed from cart");
-        })
-        .catch((err) => {
-            console.error("Error removing product from cart:", err);
-            throw err; // Propagate the error
-        });
+    return this.save();
 };
+
+// Add method to create order and save it in orders list
+userSchema.methods.createOrder = function () {
+    if (!this.cart || this.cart.items.length === 0) {
+        return Promise.reject(new Error("Cart is empty."));
+    }
+
+    const order = {
+        items: [...this.cart.items],
+        totalPrice: this.cart.totalPrice,
+        createdAt: new Date(),
+    };
+
+    // Add the order to the orders array
+    this.orders.push(order);
+
+    // Clear the cart
+    this.cart = { items: [], totalPrice: 0 };
+
+    return this.save();
+};
+
 module.exports = mongoose.model("User", userSchema);
