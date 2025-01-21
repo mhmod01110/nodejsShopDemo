@@ -8,12 +8,12 @@ const MongoDBStore = require("connect-mongodb-session")(session);
 const errorController = require("./controllers/error");
 const User = require("./models/user");
 
-const MONGODB_URL = "mongodb://localhost:27017/shop";
+const MONGODB_URI = "mongodb://localhost:27017/shop";
 
 const app = express();
 
 const store = new MongoDBStore({
-    uri: MONGODB_URL,
+    uri: MONGODB_URI,
     collection: "sessions",
 });
 
@@ -60,31 +60,12 @@ app.use(shopRoutes);
 app.use(authRoutes);
 
 mongoose
-    .connect(MONGODB_URL, {
-        // useNewUrlParser: true,
-        // useUnifiedTopology: true,
-    })
+    .connect(MONGODB_URI)
     .then((result) => {
-        console.log("Connected to MongoDB");
-        User.findOne({ name: "mhmod" })
-            .then((existingUser) => {
-                if (!existingUser) {
-                    const user = new User({
-                        name: "new user",
-                        email: "new_user@gmail.com",
-                        cart: { items: [] },
-                    });
-                    return user.save();
-                }
-                return existingUser; // Return the existing user if found
-            })
-            .then((user) => {
-                console.log("User ready:", user.name);
-                app.listen(3000, "0.0.0.0", () => {
-                    console.log("Server is running on http://0.0.0.0:3000");
-                });
-            })
-            .catch((err) => {
-                console.error("Error:", err);
-            });
+        app.listen(3000, "0.0.0.0", () => {
+            console.log("Server is running on http://0.0.0.0:3000");
+        });
+    })
+    .catch((err) => {
+        console.log(err);
     });

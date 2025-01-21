@@ -13,6 +13,7 @@ exports.getAddProduct = (req, res, next) => {
         productCSS: true,
         activeAddProduct: true,
         isEdit: editMode,
+        isAuth: req.session.isAuth
     });
 };
 

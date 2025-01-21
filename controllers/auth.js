@@ -1,4 +1,4 @@
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 
 exports.getLogin = (req, res, next) => {
@@ -14,7 +14,7 @@ exports.getSignup = (req, res, next) => {
     res.render("auth/signup", {
         path: "/signup",
         pageTitle: "Signup",
-        isAuthenticated: false,
+        isAuth: false,
     });
 };
 
@@ -45,25 +45,35 @@ exports.postSignup = (req, res, next) => {
         });
 };
 
-
-
 exports.postLogin = (req, res, next) => {
-    const userId = "678c19ab3ba2330088491dd7";
-    User.findById(userId)
+    const email = req.body.email;
+    const password = req.body.password;
+    User.findOne({ email: email })
         .then((user) => {
-            if (user) {
-                req.session.user = user;
-                req.session.user.isLoggedIn = true;
-                req.session.isLoggedIn = true;
-                res.redirect("/");
-            } else {
-                req.user = null;
+            if (!user) {
+                return res.redirect("/login");
             }
+            bcrypt
+                .compare(password, user.password)
+                .then((doMatch) => {
+                    if (doMatch) {
+                        req.session.isLoggedIn = true;
+                        req.session.user = user;
+                        return req.session.save((err) => {
+                            if (err) {
+                                console.log(err);
+                            }
+                            res.redirect("/");
+                        });
+                    }
+                    res.redirect("/login");
+                })
+                .catch((err) => {
+                    console.log(err);
+                    res.redirect("/login");
+                });
         })
-        .catch((err) => {
-            console.error("Error fetching user:", err);
-            next();
-        });
+        .catch((err) => console.log(err));
 };
 
 exports.postLogout = (req, res, next) => {
