@@ -11,7 +11,6 @@ exports.getProducts = (req, res, next) => {
                 prods: products,
                 pageTitle: "All Products",
                 path: "/products",
-                isAuth: req.session.isLoggedIn,
             });
         })
         .catch((err) => {
@@ -27,7 +26,6 @@ exports.getProduct = async (req, res, next) => {
             return res.status(400).render("404", {
                 pageTitle: "Invalid Product ID",
                 path: "/404",
-                isAuth: req.session.isLoggedIn,
             });
         }
 
@@ -37,7 +35,6 @@ exports.getProduct = async (req, res, next) => {
                     return res.status(404).render("404", {
                         pageTitle: "Product Not Found",
                         path: "/404",
-                        isAuth: req.session.isLoggedIn,
                     });
                 }
 
@@ -45,7 +42,6 @@ exports.getProduct = async (req, res, next) => {
                     product,
                     pageTitle: product.title,
                     path: "/products",
-                    isAuth: req.session.isLoggedIn,
                 });
             })
             .catch((err) => {
@@ -64,7 +60,6 @@ exports.getIndex = (req, res, next) => {
                 prods: products,
                 pageTitle: "Shop",
                 path: "/",
-                isAuth: req.session.isLoggedIn,
             });
         })
         .catch((err) => {
@@ -79,7 +74,6 @@ exports.getCart = (req, res, next) => {
         pageTitle: "Your Cart",
         products: cart.items,
         totalPrice: cart.totalPrice,
-        isAuth: req.session.isLoggedIn,
     });
 };
 
@@ -139,7 +133,6 @@ exports.getOrders = (req, res, next) => {
         path: "/orders",
         pageTitle: "Your Orders",
         orders: req.session.user.orders,
-        isAuth: req.session.isLoggedIn,
     });
 };
 
@@ -147,6 +140,5 @@ exports.getCheckout = (req, res, next) => {
     res.render("shop/checkout", {
         path: "/checkout",
         pageTitle: "Checkout",
-        isAuth: req.session.isLoggedIn,
     });
 };
