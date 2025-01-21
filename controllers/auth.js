@@ -2,7 +2,6 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 
 exports.getLogin = (req, res, next) => {
-    console.log(req.session.isLoggedIn);
     res.render("auth/login", {
         path: "/login",
         pageTitle: "Login",
@@ -22,26 +21,40 @@ exports.postSignup = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
     const confirmPassword = req.body.confirmPassword;
+
+    // Check if passwords match
+    if (password !== confirmPassword) {
+        console.log("Passwords do not match!");
+        return res.redirect("/signup");
+    }
+
     User.findOne({ email: email })
         .then((userDoc) => {
             if (userDoc) {
+                console.log("User already exists", userDoc);
                 return res.redirect("/signup");
             }
-            return bcrypt.hash(password, 12);
-        })
-        .then((hashedPassword) => {
-            const user = new User({
-                email: email,
-                password: hashedPassword,
-                cart: { items: [] },
-            });
-            return user.save();
-        })
-        .then((result) => {
-            res.redirect("/login");
+
+            // Hash the password and create a new user
+            return bcrypt
+                .hash(password, 12)
+                .then((hashedPassword) => {
+                    const user = new User({
+                        email: email,
+                        password: hashedPassword,
+                        cart: { items: [] },
+                    });
+
+                    return user.save();
+                })
+                .then((result) => {
+                    console.log("User created successfully:", result);
+                    res.redirect("/login");
+                });
         })
         .catch((err) => {
-            console.log(err);
+            console.error("Error during signup process:", err);
+            next(err); // Pass the error to the error-handling middleware
         });
 };
 
@@ -69,7 +82,9 @@ exports.postLogin = (req, res, next) => {
                     res.redirect("/login");
                 })
                 .catch((err) => {
-                    console.log(err);
+                    if (err) {
+                        console.log(err);
+                    }
                     res.redirect("/login");
                 });
         })
