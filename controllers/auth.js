@@ -6,51 +6,52 @@ const transporter = require("../util/sendMail");
 exports.getLogin = (req, res, next) => {
     res.render("auth/login", {
         path: "/login",
-        pageTitle: "Login"
+        pageTitle: "Login",
     });
 };
 
 exports.getSignup = (req, res, next) => {
     res.render("auth/signup", {
         path: "/signup",
-        pageTitle: "Signup"
+        pageTitle: "Signup",
     });
 };
 
 exports.postLogin = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
-    
+
     User.findOne({ email: email })
-        .then(user => {
+        .then((user) => {
             if (!user) {
-                req.flash('error', 'Invalid email or password.');
-                return res.redirect('/login');
+                req.flash("error", "Invalid email or password.");
+                return res.redirect("/login");
             }
-            
-            bcrypt.compare(password, user.password)
-                .then(doMatch => {
+
+            bcrypt
+                .compare(password, user.password)
+                .then((doMatch) => {
                     if (doMatch) {
                         req.session.isLoggedIn = true;
                         req.session.user = user;
-                        return req.session.save(err => {
+                        return req.session.save((err) => {
                             if (err) console.log(err);
-                            res.redirect('/');
+                            res.redirect("/");
                         });
                     }
-                    req.flash('error', 'Invalid email or password.');
-                    res.redirect('/login');
+                    req.flash("error", "Invalid email or password.");
+                    res.redirect("/login");
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.log(err);
-                    req.flash('error', 'An error occurred. Please try again.');
-                    res.redirect('/login');
+                    req.flash("error", "An error occurred. Please try again.");
+                    res.redirect("/login");
                 });
         })
-        .catch(err => {
+        .catch((err) => {
             console.log(err);
-            req.flash('error', 'An error occurred. Please try again.');
-            res.redirect('/login');
+            req.flash("error", "An error occurred. Please try again.");
+            res.redirect("/login");
         });
 };
 
@@ -60,42 +61,43 @@ exports.postSignup = (req, res, next) => {
     const confirmPassword = req.body.confirmPassword;
 
     if (password !== confirmPassword) {
-        req.flash('error', 'Passwords do not match.');
-        return res.redirect('/signup');
+        req.flash("error", "Passwords do not match.");
+        return res.redirect("/signup");
     }
 
     User.findOne({ email: email })
-        .then(userDoc => {
+        .then((userDoc) => {
             if (userDoc) {
-                req.flash('error', 'Email exists already.');
-                return res.redirect('/signup');
+                req.flash("error", "Email exists already.");
+                return res.redirect("/signup");
             }
-            
-            return bcrypt.hash(password, 12)
-                .then(hashedPassword => {
+
+            return bcrypt
+                .hash(password, 12)
+                .then((hashedPassword) => {
                     const user = new User({
                         email: email,
                         password: hashedPassword,
-                        cart: { items: [] }
+                        cart: { items: [] },
                     });
                     return user.save();
                 })
                 .then(() => {
-                    req.flash('success', 'Account created successfully!');
-                    res.redirect('/login');
+                    req.flash("success", "Account created successfully!");
+                    res.redirect("/login");
                 });
         })
-        .catch(err => {
+        .catch((err) => {
             console.log(err);
-            req.flash('error', 'An error occurred. Please try again.');
-            res.redirect('/signup');
+            req.flash("error", "An error occurred. Please try again.");
+            res.redirect("/signup");
         });
 };
 
 exports.getReset = (req, res, next) => {
     res.render("auth/reset", {
         path: "/reset",
-        pageTitle: "Reset Password"
+        pageTitle: "Reset Password",
     });
 };
 
@@ -103,27 +105,27 @@ exports.postReset = (req, res, next) => {
     crypto.randomBytes(32, (err, buffer) => {
         if (err) {
             console.log(err);
-            req.flash('error', 'An error occurred.');
-            return res.redirect('/reset');
+            req.flash("error", "An error occurred.");
+            return res.redirect("/reset");
         }
 
-        const token = buffer.toString('hex');
+        const token = buffer.toString("hex");
         User.findOne({ email: req.body.email })
-            .then(user => {
+            .then((user) => {
                 if (!user) {
-                    req.flash('error', 'No account with that email found.');
-                    return res.redirect('/reset');
+                    req.flash("error", "No account with that email found.");
+                    return res.redirect("/reset");
                 }
 
                 user.resetToken = token;
                 user.resetTokenExpiration = Date.now() + 3600000; // 1 hour
                 return user.save();
             })
-            .then(result => {
+            .then((result) => {
                 if (!result) return;
-                
-                req.flash('success', 'Reset link sent to your email!');
-                res.redirect('/login');
+
+                req.flash("success", "Reset link sent to your email!");
+                res.redirect("/login");
 
                 const mailOptions = {
                     from: "mhmod.mhmod01110@gmail.com",
@@ -133,22 +135,91 @@ exports.postReset = (req, res, next) => {
                         <h1>Password Reset Request</h1>
                         <p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to reset your password.</p>
                         <p>This link will expire in 1 hour.</p>
-                    `
+                    `,
                 };
 
                 return transporter.sendMail(mailOptions);
             })
-            .catch(err => {
+            .catch((err) => {
                 console.log(err);
-                req.flash('error', 'An error occurred.');
-                res.redirect('/reset');
+                req.flash("error", "An error occurred.");
+                res.redirect("/reset");
             });
     });
 };
 
+exports.getNewPassword = (req, res, next) => {
+    const resetToken = req.params.token;
+    User.findOne({
+        resetToken: resetToken,
+        resetTokenExpiration: { $gt: Date.now() },
+    })
+        .then((user) => {
+            if (!user) {
+                console.log(
+                    "No such user found for password reset -OR- Expired token"
+                );
+                return res.status(404).render("404", {
+                    pageTitle: "Product Not Found",
+                    path: "/404",
+                });
+            } else {
+                return res.render("auth/new-password", {
+                    path: "/new-password",
+                    pageTitle: "New Password",
+                    userId: user._id.toString(),
+                    passwordToken: user.resetToken,
+                });
+            }
+        })
+        .catch((err) => {
+            console.log("Err in finding user: ", err);
+        });
+};
+
+exports.postNewPassword = (req, res, next) => {
+    const newPassword = req.body.password;
+    const userId = req.body.userId;
+    const passwordToken = req.body.passwordToken;
+    let resetUser;
+
+    User.findOne({
+        resetToken: passwordToken,
+        resetTokenExpiration: { $gt: Date.now() },
+        _id: userId
+    })
+        .then((user) => {
+            if (!user) {
+                console.log(
+                    "No such user found for password reset -OR- Expired token"
+                );
+                return res.status(404).render("404", {
+                    pageTitle: "Product Not Found",
+                    path: "/404",
+                });
+            } else {
+                resetUser = user;
+                return bcrypt.hash(newPassword, 12);
+            }
+        })
+        .then(hashedPassword =>{
+            resetUser.password = hashedPassword;
+            resetUser.resetToken = undefined;
+            resetUser.resetTokenExpiration = undefined;
+            return resetUser.save();
+        })
+        .then(result => {
+            req.flash("success", "Password updated successfully!");
+            res.redirect("/login");
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+};
+
 exports.postLogout = (req, res, next) => {
-    req.session.destroy(err => {
+    req.session.destroy((err) => {
         if (err) console.log(err);
-        res.redirect('/');
+        res.redirect("/");
     });
 };

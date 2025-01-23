@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
 const mongodb = require("mongodb");
 const Product = require("../models/product");
-// const Cart = require("../models/cart");
-// const User = require("../models/user");
 
 exports.getAddProduct = (req, res, next) => {
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
     const editMode = req.query.edit;
     res.render("admin/edit-product", {
         pageTitle: "Add Product",
@@ -17,35 +18,41 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = (req, res, next) => {
-    const title = req.body.title;
-    const price = req.body.price;
-    const imageUrl = req.body.imageUrl;
-    const description = req.body.description;
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
+    const { title, price, imageUrl, description } = req.body;
     const product = new Product({
-        title: title,
-        price: price,
-        imageUrl: imageUrl,
-        description: description,
-        userId: req.session.user
+        title,
+        price,
+        imageUrl,
+        description,
+        userId: req.session.user._id,
     });
     product
         .save()
-        .then((result) => {
+        .then(() => {
             console.log("Product Created");
             res.redirect("/admin/products");
         })
         .catch((err) => {
-            console.log(err);
+            console.error("Error creating product:", err);
         });
 };
 
 exports.getEditProduct = (req, res, next) => {
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
     const editMode = req.query.edit;
     if (editMode !== "true") {
         return res.redirect("/");
     }
     const prodId = req.params.productId;
-    Product.findById(prodId)
+    Product.findOne({
+        _id: new mongodb.ObjectId(prodId),
+        userId: req.session.user._id,
+    })
         .then((product) => {
             if (!product) {
                 return res.redirect("/");
@@ -57,7 +64,7 @@ exports.getEditProduct = (req, res, next) => {
                 productCSS: true,
                 activeAddProduct: true,
                 isEdit: editMode,
-                product: product,
+                product,
             });
         })
         .catch((err) => {
@@ -67,20 +74,19 @@ exports.getEditProduct = (req, res, next) => {
 };
 
 exports.postEditProduct = (req, res, next) => {
-    const prodId = req.body.productId;
-    const updatedTitle = req.body.title;
-    const updatedImageUrl = req.body.imageUrl;
-    const updatedPrice = req.body.price;
-    const updatedDescription = req.body.description;
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
+    const { productId, title, imageUrl, price, description } = req.body;
 
     Product.updateOne(
-        { _id: new mongodb.ObjectId(prodId) }, // Filter
-        { // Update
+        { _id: new mongodb.ObjectId(productId), userId: req.session.user._id },
+        {
             $set: {
-                title: updatedTitle,
-                imageUrl: updatedImageUrl,
-                price: updatedPrice,
-                description: updatedDescription,
+                title,
+                imageUrl,
+                price,
+                description,
             },
         }
     )
@@ -95,20 +101,26 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.postDeleteProduct = (req, res, next) => {
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
     const prodId = req.body.productId;
-    Product.findByIdAndDelete(prodId)
+    Product.deleteOne({ _id: new mongodb.ObjectId(prodId), userId: req.session.user._id })
         .then(() => {
             console.log("Product deleted");
             res.redirect("/admin/products");
         })
         .catch((err) => {
             console.error("Error deleting product:", err);
-            res.redirect("/");
+            res.redirect("/admin/products");
         });
 };
 
 exports.getProducts = (req, res, next) => {
-    Product.find({userId: req.user._id}) // retutn all products
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
+    Product.find({ userId: req.session.user._id })
         .then((products) => {
             res.render("admin/products", {
                 prods: products,
@@ -117,6 +129,6 @@ exports.getProducts = (req, res, next) => {
             });
         })
         .catch((err) => {
-            console.log(err);
+            console.error("Error fetching products:", err);
         });
 };
