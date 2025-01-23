@@ -4,22 +4,16 @@ const User = require("../models/user");
 const transporter = require("../util/sendMail");
 
 exports.getLogin = (req, res, next) => {
-    const message = req.flash('error');
     res.render("auth/login", {
         path: "/login",
-        pageTitle: "Login",
-        errorMessage: message.length > 0 ? message[0] : null,
-        csrfToken: req.csrfToken()
+        pageTitle: "Login"
     });
 };
 
 exports.getSignup = (req, res, next) => {
-    const message = req.flash('error');
     res.render("auth/signup", {
         path: "/signup",
-        pageTitle: "Signup",
-        errorMessage: message.length > 0 ? message[0] : null,
-        csrfToken: req.csrfToken()
+        pageTitle: "Signup"
     });
 };
 
@@ -99,15 +93,9 @@ exports.postSignup = (req, res, next) => {
 };
 
 exports.getReset = (req, res, next) => {
-    const errorMessage = req.flash('error');
-    const successMessage = req.flash('success');
-    
     res.render("auth/reset", {
         path: "/reset",
-        pageTitle: "Reset Password",
-        errorMessage: errorMessage.length > 0 ? errorMessage[0] : null,
-        successMessage: successMessage.length > 0 ? successMessage[0] : null,
-        csrfToken: req.csrfToken()
+        pageTitle: "Reset Password"
     });
 };
 
