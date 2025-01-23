@@ -38,6 +38,12 @@ app.use(
 );
 app.use(csrfProtection);
 app.use(flash());
+// Middleware to make flash messages available to all views
+app.use((req, res, next) => {
+    res.locals.errorMessage = req.flash('error');
+    res.locals.successMessage = req.flash('success');
+    next();
+});
 
 app.use((req, res, next) => {
     if (!req.session.user) {
