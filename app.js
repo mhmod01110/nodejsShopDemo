@@ -83,14 +83,16 @@ app.use(shopRoutes);
 app.use(authRoutes);
 
 mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  family: 4 // Force IPv4
 })
-  .then(() => {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server is running on http://0.0.0.0:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.log(err);
+.then(() => {
+  console.log('MongoDB connected successfully');
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
   });
+})
+.catch((err) => {
+  console.error('MongoDB connection error:', err);
+});
