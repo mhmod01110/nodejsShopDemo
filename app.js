@@ -8,9 +8,12 @@ const csrf = require('csurf');
 const flash = require('connect-flash');
 const errorController = require("./controllers/error");
 const User = require("./models/user");
+require('dotenv').config({ path: './.env' });
+
 
 // const MONGODB_URI = "mongodb://localhost:27017/shop";
-MONGODB_URI = process.env.DB_URI
+const MONGODB_URI = process.env.DB_URI;
+const PORT = process.env.PORT || 8080;
 
 const app = express();
 
@@ -80,8 +83,8 @@ app.use(authRoutes);
 mongoose
     .connect(MONGODB_URI)
     .then((result) => {
-        app.listen(3000, "0.0.0.0", () => {
-            console.log("Server is running on http://0.0.0.0:3000");
+        app.listen(PORT, "0.0.0.0", () => {
+            console.log("Server is running on port ${PORT}");
         });
     })
     .catch((err) => {
