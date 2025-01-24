@@ -20,10 +20,6 @@ const app = express();
 const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: "sessions",
-  connectionOptions: {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  },
 });
 
 const csrfProtection = csrf();
@@ -85,17 +81,12 @@ app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  ssl: true,
-  tlsAllowInvalidCertificates: true, // Not recommended for production
-})
-    .then((result) => {
-        app.listen(PORT, "0.0.0.0", () => {
-            console.log("Server is running on port: ", PORT);
-        });
-    })
-    .catch((err) => {
-        console.log(err);
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server is running on http://0.0.0.0:${PORT}`);
     });
+  })
+  .catch((err) => {
+    console.log(err);
+  });
