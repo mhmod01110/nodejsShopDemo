@@ -13,6 +13,7 @@ require('dotenv').config({ path: './.env' });
 
 // const MONGODB_URI = "mongodb://localhost:27017/shop";
 const MONGODB_URI = process.env.DB_URI;
+console.log('DB_URI:', process.env.DB_URI); // Add this before mongoose.connect()
 const PORT = process.env.PORT || 8080;
 
 const app = express();
