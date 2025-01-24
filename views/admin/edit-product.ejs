@@ -7,29 +7,57 @@
    <%- include('../includes/navigation.ejs') %>
 
     <main>
-        <form class="product-form" action="/admin/<% if (isEdit) { %>edit-product<% }else { %>add-product<% } %>" method="POST">
+        <% if (errorMessage) { %>
+            <div class="user-message user-message--error"><%= errorMessage %></div>
+        <% } %>
+        <form class="product-form" action="<%= isEdit ? '/admin/edit-product' : '/admin/add-product' %>" method="POST">
             <div class="form-control">
                 <label for="title">Title</label>
-                <input type="text" name="title" id="title" value="<% if (isEdit) { %> <%= product.title %> <% } %>">
+                <input 
+                    type="text" 
+                    name="title" 
+                    id="title" 
+                    value="<%= oldInput ? oldInput.title : (product ? product.title : '') %>"
+                    class="<%= validationErrors && validationErrors.some(error => error.path === 'title') ? 'invalid' : '' %>"
+                >
             </div>
             <div class="form-control">
                 <label for="imageUrl">Image URL</label>
-                <input type="text" name="imageUrl" id="imageUrl" value="<% if (isEdit) { %> <%= product.imageUrl %> <% } %>">
+                <input 
+                    type="text" 
+                    name="imageUrl" 
+                    id="imageUrl" 
+                    value="<%= oldInput ? oldInput.imageUrl : (product ? product.imageUrl : '') %>"
+                    class="<%= validationErrors && validationErrors.some(error => error.path === 'imageUrl') ? 'invalid' : '' %>"
+                >
             </div>
             <div class="form-control">
                 <label for="price">Price</label>
-                <input type="number" name="price" id="price" step="0.01" value="<% if (isEdit) { %><%= product.price %><% } %>">
-
+                <input 
+                    type="number" 
+                    name="price" 
+                    id="price" 
+                    step="0.01" 
+                    value="<%= oldInput ? oldInput.price : (product ? product.price : '') %>"
+                    class="<%= validationErrors && validationErrors.some(error => error.path === 'price') ? 'invalid' : '' %>"
+                >
             </div>
             <div class="form-control">
                 <label for="description">Description</label>
-                <textarea name="description" id="description" rows="5"><% if (isEdit) { %> <%= product.description %> <% } %></textarea>
+                <textarea 
+                    name="description" 
+                    id="description" 
+                    rows="5"
+                    class="<%= validationErrors && validationErrors.some(error => error.path === 'description') ? 'invalid' : '' %>"
+                ><%= oldInput ? oldInput.description : (product ? product.description : '') %></textarea>
             </div>
+            
             <% if (isEdit) { %>
                 <input type="hidden" name="productId" value="<%= product._id %>">
             <% } %>
+            
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="btn" type="submit"><% if (!isEdit) { %>Add Product<% } else { %>Update Product<% } %></button>
+            <button class="btn" type="submit"><%= isEdit ? 'Update Product' : 'Add Product' %></button>
         </form>
     </main>
 <%- include('../includes/end.ejs') %>
