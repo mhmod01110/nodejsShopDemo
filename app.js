@@ -85,8 +85,6 @@ app.use(authRoutes);
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  ssl: true,
-  sslValidate: false  // Use cautiously, only for troubleshooting
 })
   .then(() => {
     app.listen(PORT, "0.0.0.0", () => {
