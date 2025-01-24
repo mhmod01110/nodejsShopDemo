@@ -9,7 +9,8 @@ const flash = require('connect-flash');
 const errorController = require("./controllers/error");
 const User = require("./models/user");
 
-const MONGODB_URI = "mongodb://localhost:27017/shop";
+// const MONGODB_URI = "mongodb://localhost:27017/shop";
+MONGODB_URI = process.env.DB_URI
 
 const app = express();
 
