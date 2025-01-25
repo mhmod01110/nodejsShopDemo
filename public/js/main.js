@@ -1,16 +1,17 @@
-const backdrop = document.querySelector('.backdrop');
-const sideDrawer = document.querySelector('.mobile-nav');
-const menuToggle = document.querySelector('#side-menu-toggle');
+document.addEventListener('DOMContentLoaded', () => {
+  const menuToggle = document.querySelector('#side-menu-toggle');
+  const mobileNav = document.querySelector('.mobile-nav');
+  const backdrop = document.querySelector('.backdrop');
 
-function backdropClickHandler() {
-  backdrop.style.display = 'none';
-  sideDrawer.classList.remove('open');
-}
+  if (menuToggle && mobileNav && backdrop) {
+      menuToggle.addEventListener('click', (e) => {
+          mobileNav.classList.toggle('show');
+          backdrop.classList.toggle('show');
+      });
 
-function menuToggleClickHandler() {
-  backdrop.style.display = 'block';
-  sideDrawer.classList.add('open');
-}
-
-backdrop.addEventListener('click', backdropClickHandler);
-menuToggle.addEventListener('click', menuToggleClickHandler);
+      backdrop.addEventListener('click', () => {
+          mobileNav.classList.remove('show');
+          backdrop.classList.remove('show');
+      });
+  }
+});

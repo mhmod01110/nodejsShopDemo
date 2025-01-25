@@ -1,40 +1,29 @@
 <%- include('../includes/head.ejs') %>
-    <link rel="stylesheet" href="/css/product.css">
-    </head>
-
-    <body>
-        <%- include('../includes/navigation.ejs') %>
-
-            <main>
-                <% if (prods.length > 0) { %>
-                    <div class="grid">
-                        <% for (let product of prods) { %>
-                            <article class="card product-item">
-                                <header class="card__header">
-                                    <h1 class="product__title">
-                                        <%= product.title %>
-                                    </h1>
-                                </header>
-                                <div class="card__image">
-                                    <img src="<%= product.imageUrl %>" alt="<%= product.title %>">
-                                </div>
-                                <div class="card__content">
-                                    <h2 class="product__price">$
-                                        <%= product.price %>
-                                    </h2>
-                                    <p class="product__description">
-                                        <%= product.description %>
-                                    </p>
-                                </div>
-                                <div class="card__actions">
-                                    <a href="/products/<%= product._id %>" class="btn">Details</a>
+</head>
+<body>
+    <%- include('../includes/navigation.ejs') %>
+    <div class="container mt-4">
+        <% if (prods.length > 0) { %>
+            <div class="row">
+                <% for (let product of prods) { %>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <img src="<%= product.imageUrl %>" class="card-img-top" alt="<%= product.title %>">
+                            <div class="card-body">
+                                <h5 class="card-title text-truncate"><%= product.title %></h5>
+                                <h6 class="card-subtitle mb-2 text-muted">$<%= product.price %></h6>
+                                <p class="card-text text-secondary"><%= product.description %></p>
+                                <div class="d-flex justify-content-between">
+                                    <a href="/products/<%= product._id %>" class="btn btn-primary btn-sm">Details</a>
                                     <%- include('../includes/add-to-cart.ejs', {product: product}) %>
                                 </div>
-                            </article>
-                            <% } %>
+                            </div>
+                        </div>
                     </div>
-                    <% } else { %>
-                        <h1>No Products Found!</h1>
-                        <% } %>
-            </main>
-            <%- include('../includes/end.ejs') %>
+                <% } %>
+            </div>
+        <% } else { %>
+            <div class="alert alert-secondary text-center" role="alert">No Products Found!</div>
+        <% } %>
+    </div>
+    <%- include('../includes/end.ejs') %>

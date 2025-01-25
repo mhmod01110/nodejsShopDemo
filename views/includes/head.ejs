@@ -5,6 +5,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title><%= pageTitle %></title>
-    <link rel="stylesheet" href="/css/main.css">
+    <title>
+        <%= pageTitle %>
+    </title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a4a4a;
+            --secondary-color: #6c757d;
+            --accent-color: #007bff;
+            --background-color: #f4f4f4;
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--primary-color) !important;
+        }
+
+        .navbar-light .navbar-nav .nav-link {
+            color: white !important;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-light .navbar-nav .nav-link:hover {
+            color: var(--accent-color) !important;
+        }
+
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.03);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .product-detail {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-nav {
+            width: 250px;
+            height: 100vh;
+            max-width: 90%;
+            position: fixed;
+            left: -250px;
+            top: 0;
+            background: white;
+            z-index: 1000;
+            padding: 2rem 1rem 1rem 2rem;
+            transition: transform 0.3s ease-out;
+        }
+
+        .mobile-nav.open {
+            transform: translateX(250px);
+        }
+
+        .backdrop.open {
+            display: block;
+        }
+
+        #side-menu-toggle {
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-nav {
+                display: none;
+            }
+
+            .backdrop {
+                display: none;
+            }
+        }
+    </style>
     <link rel="icon" href="/icon.png" type="image/x-icon">
+</head>

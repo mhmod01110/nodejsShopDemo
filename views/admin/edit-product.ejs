@@ -1,63 +1,72 @@
 <%- include('../includes/head.ejs') %>
-    <link rel="stylesheet" href="/css/forms.css">
-    <link rel="stylesheet" href="/css/product.css">
 </head>
-
 <body>
-   <%- include('../includes/navigation.ejs') %>
-
-    <main>
-        <% if (errorMessage) { %>
-            <div class="user-message user-message--error"><%= errorMessage %></div>
-        <% } %>
-        <form class="product-form" action="<%= isEdit ? '/admin/edit-product' : '/admin/add-product' %>" method="POST">
-            <div class="form-control">
-                <label for="title">Title</label>
-                <input 
-                    type="text" 
-                    name="title" 
-                    id="title" 
-                    value="<%= oldInput ? oldInput.title : (product ? product.title : '') %>"
-                    class="<%= validationErrors && validationErrors.some(error => error.path === 'title') ? 'invalid' : '' %>"
-                >
+    <%- include('../includes/navigation.ejs') %>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <% if (errorMessage) { %>
+                    <div class="alert alert-danger"><%= errorMessage %></div>
+                <% } %>
+                <div class="card">
+                    <div class="card-header">
+                        <%= isEdit ? 'Edit Product' : 'Add New Product' %>
+                    </div>
+                    <div class="card-body">
+                        <form action="<%= isEdit ? '/admin/edit-product' : '/admin/add-product' %>" method="POST">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input 
+                                    type="text" 
+                                    name="title" 
+                                    id="title" 
+                                    class="form-control <%= validationErrors && validationErrors.some(error => error.path === 'title') ? 'is-invalid' : '' %>"
+                                    value="<%= oldInput ? oldInput.title : (product ? product.title : '') %>"
+                                >
+                            </div>
+                            <div class="mb-3">
+                                <label for="imageUrl" class="form-label">Image URL</label>
+                                <input 
+                                    type="text" 
+                                    name="imageUrl" 
+                                    id="imageUrl" 
+                                    class="form-control <%= validationErrors && validationErrors.some(error => error.path === 'imageUrl') ? 'is-invalid' : '' %>"
+                                    value="<%= oldInput ? oldInput.imageUrl : (product ? product.imageUrl : '') %>"
+                                >
+                            </div>
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Price</label>
+                                <input 
+                                    type="number" 
+                                    name="price" 
+                                    id="price" 
+                                    step="0.01" 
+                                    class="form-control <%= validationErrors && validationErrors.some(error => error.path === 'price') ? 'is-invalid' : '' %>"
+                                    value="<%= oldInput ? oldInput.price : (product ? product.price : '') %>"
+                                >
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea 
+                                    name="description" 
+                                    id="description" 
+                                    rows="5"
+                                    class="form-control <%= validationErrors && validationErrors.some(error => error.path === 'description') ? 'is-invalid' : '' %>"
+                                ><%= oldInput ? oldInput.description : (product ? product.description : '') %></textarea>
+                            </div>
+                            
+                            <% if (isEdit) { %>
+                                <input type="hidden" name="productId" value="<%= product._id %>">
+                            <% } %>
+                            
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <button class="btn btn-primary" type="submit">
+                                <%= isEdit ? 'Update Product' : 'Add Product' %>
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="form-control">
-                <label for="imageUrl">Image URL</label>
-                <input 
-                    type="text" 
-                    name="imageUrl" 
-                    id="imageUrl" 
-                    value="<%= oldInput ? oldInput.imageUrl : (product ? product.imageUrl : '') %>"
-                    class="<%= validationErrors && validationErrors.some(error => error.path === 'imageUrl') ? 'invalid' : '' %>"
-                >
-            </div>
-            <div class="form-control">
-                <label for="price">Price</label>
-                <input 
-                    type="number" 
-                    name="price" 
-                    id="price" 
-                    step="0.01" 
-                    value="<%= oldInput ? oldInput.price : (product ? product.price : '') %>"
-                    class="<%= validationErrors && validationErrors.some(error => error.path === 'price') ? 'invalid' : '' %>"
-                >
-            </div>
-            <div class="form-control">
-                <label for="description">Description</label>
-                <textarea 
-                    name="description" 
-                    id="description" 
-                    rows="5"
-                    class="<%= validationErrors && validationErrors.some(error => error.path === 'description') ? 'invalid' : '' %>"
-                ><%= oldInput ? oldInput.description : (product ? product.description : '') %></textarea>
-            </div>
-            
-            <% if (isEdit) { %>
-                <input type="hidden" name="productId" value="<%= product._id %>">
-            <% } %>
-            
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="btn" type="submit"><%= isEdit ? 'Update Product' : 'Add Product' %></button>
-        </form>
-    </main>
-<%- include('../includes/end.ejs') %>
+        </div>
+    </div>
+    <%- include('../includes/end.ejs') %>
