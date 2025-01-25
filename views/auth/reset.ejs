@@ -1,25 +1,59 @@
 <%- include('../includes/head.ejs') %>
-    <link rel="stylesheet" href="/css/forms.css">
-    <link rel="stylesheet" href="/css/auth.css">
 </head>
 
 <body>
-   <%- include('../includes/navigation.ejs') %>
+    <%- include('../includes/navigation.ejs') %>
 
-    <main>
-        <% if (errorMessage && errorMessage.length > 0) { %>
-            <div class="user-message user-message--error"><%= errorMessage[0] %></div>
-        <% } %>
-        <% if (successMessage && successMessage.length > 0) { %>
-            <div class="user-message user-message--success"><%= successMessage[0] %></div>
-        <% } %>
-        <form class="login-form" action="/reset" method="POST">
-            <div class="form-control">
-                <label for="email">E-Mail</label>
-                <input type="email" name="email" id="email">
+    <main class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Reset Password</h3>
+                    </div>
+                    <div class="card-body">
+                        <% if (errorMessage && errorMessage.length > 0) { %>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <%= errorMessage[0] %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <% } %>
+                        <% if (successMessage && successMessage.length > 0) { %>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <%= successMessage[0] %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <% } %>
+
+                        <form class="login-form" action="/reset" method="POST">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">E-Mail</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input 
+                                        type="email" 
+                                        name="email" 
+                                        id="email" 
+                                        class="form-control" 
+                                        placeholder="Enter your email address" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <div class="d-grid">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Reset Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="/login" class="text-decoration-none">Remember your password? Login</a>
+                </div>
             </div>
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="btn" type="submit">Reset Password</button>
-        </form>
+        </div>
     </main>
-<%- include('../includes/end.ejs') %>
+
+    <%- include('../includes/end.ejs') %>
