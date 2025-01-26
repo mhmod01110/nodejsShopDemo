@@ -43,11 +43,14 @@ app.use(
     })
 );
 app.use(csrfProtection);
+
 app.use(flash());
 // Middleware to make flash messages available to all views
 app.use((req, res, next) => {
-    res.locals.errorMessage = req.flash('error');
-    res.locals.successMessage = req.flash('success');
+    res.locals.errorMessage = req.flash("error");
+    res.locals.successMessage = req.flash("success");
+    res.locals.isAuth = req.session.isLoggedIn;
+    res.locals.csrfToken = req.csrfToken();
     next();
 });
 
@@ -72,15 +75,18 @@ app.use((req, res, next) => {
         });
 });
 
-app.use((req, res, next) => {
-    res.locals.isAuth = req.session.isLoggedIn;
-    res.locals.csrfToken = req.csrfToken();
-    next();
-  });
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
+
+app.get("/500", errorController.get500);
+
+app.use(errorController.get404);
+
+app.use((error, req, res, next) => {
+    res.redirect("/500");
+})
 
 mongoose.connect(MONGODB_URI, {
   serverSelectionTimeoutMS: 5000,

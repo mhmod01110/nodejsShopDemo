@@ -13,10 +13,10 @@ exports.getAddProduct = (req, res, next) => {
         activeAddProduct: true,
         isEdit: editMode,
         oldInput: {
-            title: '',
-            price: '',
-            imageUrl: '',
-            description: ''
+            title: "",
+            price: "",
+            imageUrl: "",
+            description: "",
         },
         validationErrors: [],
         errorMessage: null,
@@ -64,8 +64,9 @@ exports.postAddProduct = (req, res, next) => {
             res.redirect("/admin/products");
         })
         .catch((err) => {
-            console.error("Error creating product:", err);
-            res.redirect("/admin/products");
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -79,7 +80,7 @@ exports.getEditProduct = (req, res, next) => {
     }
     const prodId = req.params.productId;
     Product.findOne({
-        _id: new mongodb.ObjectId(prodId),
+        _id: new mongoose.Types.ObjectId(prodId),
         userId: req.session.user._id,
     })
         .then((product) => {
@@ -98,15 +99,16 @@ exports.getEditProduct = (req, res, next) => {
                     title: product.title,
                     price: product.price,
                     imageUrl: product.imageUrl,
-                    description: product.description
+                    description: product.description,
                 },
                 validationErrors: [],
                 errorMessage: null,
             });
         })
         .catch((err) => {
-            console.error(err);
-            res.redirect("/");
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -145,7 +147,7 @@ exports.postEditProduct = (req, res, next) => {
     const { productId, title, imageUrl, price, description } = req.body;
 
     Product.updateOne(
-        { _id: new mongodb.ObjectId(productId), userId: req.session.user._id },
+        { _id: new mongoose.Types.ObjectId(productId), userId: req.session.user._id },
         {
             $set: {
                 title,
@@ -160,15 +162,16 @@ exports.postEditProduct = (req, res, next) => {
             res.redirect("/admin/products");
         })
         .catch((err) => {
-            console.error("Error updating product:", err);
-            res.redirect("/admin/products");
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
 exports.postDeleteProduct = (req, res, next) => {
     const prodId = req.body.productId;
     Product.deleteOne({
-        _id: new mongodb.ObjectId(prodId),
+        _id: new mongoose.Types.ObjectId(prodId),
         userId: req.session.user._id,
     })
         .then(() => {
@@ -176,8 +179,9 @@ exports.postDeleteProduct = (req, res, next) => {
             res.redirect("/admin/products");
         })
         .catch((err) => {
-            console.error("Error deleting product:", err);
-            res.redirect("/admin/products");
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -194,6 +198,8 @@ exports.getProducts = (req, res, next) => {
             });
         })
         .catch((err) => {
-            console.error("Error fetching products:", err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };

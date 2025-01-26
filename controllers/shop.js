@@ -3,7 +3,6 @@ const Product = require("../models/product");
 const Order = require("../models/order");
 const mongoose = require("mongoose");
 
-
 exports.getProducts = (req, res, next) => {
     Product.find()
         .then((products) => {
@@ -45,7 +44,9 @@ exports.getProduct = async (req, res, next) => {
                 });
             })
             .catch((err) => {
-                console.log(err);
+                const error = new Error(err);
+                error.httpStatusCode = 500;
+                return next(error);
             });
     } catch (err) {
         console.error("Error fetching product:", err);
@@ -63,7 +64,9 @@ exports.getIndex = (req, res, next) => {
             });
         })
         .catch((err) => {
-            console.log(err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -91,8 +94,9 @@ exports.postCart = (req, res, next) => {
             res.redirect("/cart");
         })
         .catch((err) => {
-            console.error("Error adding product to cart:", err);
-            res.status(500).json({ error: "Failed to update the cart" });
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -105,10 +109,9 @@ exports.postCartDeleteProduct = (req, res, next) => {
             res.redirect("/cart");
         })
         .catch((err) => {
-            console.log(err);
-            res.status(500).json({
-                error: "Failed to delete product from cart",
-            });
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -124,7 +127,9 @@ exports.postOrder = (req, res, next) => {
             // });
         })
         .catch((err) => {
-            console.log(err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 

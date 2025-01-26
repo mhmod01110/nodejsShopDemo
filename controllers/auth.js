@@ -78,7 +78,9 @@ exports.postLogin = (req, res, next) => {
             });
         })
         .catch((err) => {
-            next(err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -112,7 +114,9 @@ exports.postSignup = (req, res, next) => {
             res.redirect("/login");
         })
         .catch((err) => {
-            next(err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -155,7 +159,7 @@ exports.postReset = (req, res, next) => {
                     subject: "Password Reset",
                     html: `
                         <h1>Password Reset Request</h1>
-                        <p>Click this <a href="https://frightened-imogen-iti0211-e79b0a9d.koyeb.app/reset/${token}">link</a> to reset your password.</p>
+                        <p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to reset your password.</p>
                         <p>This link will expire in 1 hour.</p>
                     `,
                 };
@@ -195,7 +199,9 @@ exports.getNewPassword = (req, res, next) => {
             }
         })
         .catch((err) => {
-            console.log("Err in finding user: ", err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -240,8 +246,9 @@ exports.postNewPassword = (req, res, next) => {
             }
         })
         .catch((err) => {
-            console.log(err);
-            next(err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
