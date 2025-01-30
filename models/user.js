@@ -44,44 +44,75 @@ const userSchema = new Schema({
                 },
             ],
             totalPrice: { type: Number, required: true },
+            paymentId: { type: String },
+            paymentStatus: { type: String, default: 'completed' },
             createdAt: { type: Date, default: Date.now },
+            userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
         },
     ],
 });
 
 userSchema.methods.addToCart = function (product) {
+    // Initialize cart if it doesn't exist
     if (!this.cart) {
         this.cart = { items: [], totalPrice: 0 };
     }
 
+    // Ensure cart items is an array
+    if (!Array.isArray(this.cart.items)) {
+        this.cart.items = [];
+    }
+
+    // Ensure all existing orders have userId
+    if (this.orders && Array.isArray(this.orders)) {
+        this.orders.forEach(order => {
+            if (!order.userId) {
+                order.userId = this._id;
+            }
+        });
+    }
+
+    // Find existing product in cart
     const cartProductIndex = this.cart.items.findIndex(
         (item) => item.product._id.toString() === product._id.toString()
     );
 
-    let updatedCartItems = [...this.cart.items];
-    let newTotalPrice = this.cart.totalPrice;
+    // Initialize cart total price if it doesn't exist
+    let currentTotalPrice = parseFloat(this.cart.totalPrice || 0);
+    const productPrice = parseFloat(product.price || 0);
 
+    // Update cart items
     if (cartProductIndex >= 0) {
-        updatedCartItems[cartProductIndex].quantity += 1;
-        newTotalPrice += product.price;
+        // Product exists in cart - increment quantity
+        this.cart.items[cartProductIndex].quantity += 1;
+        currentTotalPrice += productPrice;
     } else {
-        updatedCartItems.push({
+        // Product not in cart - add new item
+        this.cart.items.push({
             product: {
                 _id: product._id,
                 title: product.title,
-                price: product.price,
+                price: productPrice,
                 description: product.description,
                 imageUrl: product.imageUrl,
             },
             quantity: 1,
         });
-        newTotalPrice += product.price;
+        currentTotalPrice += productPrice;
     }
 
-    this.cart.items = updatedCartItems;
-    this.cart.totalPrice = newTotalPrice;
+    // Update total price with 2 decimal precision
+    this.cart.totalPrice = parseFloat(currentTotalPrice.toFixed(2));
 
-    return this.save();
+    // Save and return promise
+    return this.save()
+        .then(result => {
+            return result;
+        })
+        .catch(err => {
+            console.error('Error in addToCart:', err);
+            return Promise.reject(err);
+        });
 };
 
 userSchema.methods.deleteItemFromCart = function (prodId) {
@@ -100,7 +131,6 @@ userSchema.methods.deleteItemFromCart = function (prodId) {
     return this.save();
 };
 
-// Add method to create order and save it in orders list
 userSchema.methods.createOrder = function () {
     if (!this.cart || this.cart.items.length === 0) {
         return Promise.reject(new Error("Cart is empty."));
@@ -110,12 +140,10 @@ userSchema.methods.createOrder = function () {
         items: [...this.cart.items],
         totalPrice: this.cart.totalPrice,
         createdAt: new Date(),
+        userId: this._id // Add reference to user
     };
 
-    // Add the order to the orders array
     this.orders.push(order);
-
-    // Clear the cart
     this.cart = { items: [], totalPrice: 0 };
 
     return this.save();

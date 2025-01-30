@@ -13,3 +13,7 @@ exports.get500 = (req, res, next) => {
         isAuth: false
     });
 };
+
+// 422 error complete : 
+
+

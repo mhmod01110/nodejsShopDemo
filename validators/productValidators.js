@@ -11,11 +11,6 @@ exports.productValidator = [
         .isFloat({ min: 0.01 })
         .withMessage('Price must be a positive number'),
     
-    body('imageUrl')
-        .trim()
-        .isURL()
-        .withMessage('Please enter a valid URL for the image'),
-    
     body('description')
         .trim()
         .isLength({ min: 5, max: 500 })

@@ -1,0 +1,96 @@
+<%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/css/cart.css">
+</head>
+<body>
+    <%- include('../includes/navigation.ejs') %>
+    <div class="container mt-4">
+        <% if (products.length > 0) { %>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Order Summary</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush mb-3">
+                        <% products.forEach(item => { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="my-0"><%= item.product.title %></h6>
+                                    <small class="text-muted">Quantity: <%= item.quantity %></small>
+                                </div>
+                                <span class="text-muted">$<%= (item.product.price * item.quantity).toFixed(2) %></span>
+                            </li>
+                        <% }); %>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Total</strong>
+                            <strong>$<%= totalPrice.toFixed(2) %></strong>
+                        </li>
+                    </ul>
+
+                    <% if (error) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <%= error %>
+                        </div>
+                    <% } %>
+
+                    <form action="/checkout" method="POST" id="payment-form">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <div id="card-element" class="form-control mb-3">
+                            <!-- A Stripe Element will be inserted here. -->
+                        </div>
+
+                        <!-- Used to display form errors. -->
+                        <div id="card-errors" role="alert" class="alert alert-danger d-none"></div>
+
+                        <button class="btn btn-primary w-100" type="submit">Pay Now</button>
+                    </form>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="alert alert-info text-center">
+                Your cart is empty!
+                <a href="/products" class="alert-link">Go shopping</a>
+            </div>
+        <% } %>
+    </div>
+
+    <% if (products.length > 0) { %>
+        <script src="https://js.stripe.com/v3/"></script>
+        <script>
+            const stripe = Stripe('<%= stripePublicKey %>');
+            const elements = stripe.elements();
+
+            // Create an instance of the card Element.
+            const card = elements.create('card');
+
+            // Add an instance of the card Element into the `card-element` div.
+            card.mount('#card-element');
+
+            // Handle form submission.
+            const form = document.getElementById('payment-form');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                stripe.createToken(card).then(function(result) {
+                    if (result.error) {
+                        // Inform the user if there was an error.
+                        const errorElement = document.getElementById('card-errors');
+                        errorElement.textContent = result.error.message;
+                        errorElement.classList.remove('d-none');
+                    } else {
+                        // Send the token to your server.
+                        const tokenInput = document.createElement('input');
+                        tokenInput.setAttribute('type', 'hidden');
+                        tokenInput.setAttribute('name', 'stripeToken');
+                        tokenInput.setAttribute('value', result.token.id);
+                        form.appendChild(tokenInput);
+
+                        form.submit();
+                    }
+                });
+            });
+        </script>
+    <% } %>
+
+    <%- include('../includes/end.ejs') %>
+</body>
+</html>

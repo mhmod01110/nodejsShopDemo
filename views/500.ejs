@@ -3,9 +3,32 @@
 
     <body>
         <%- include('includes/navigation.ejs') %>
-            <h1>Error has occured !</h1>
-            <p>
-                Error has occured, Sorry for that, we are working on solving it
-            </p>
-
-            <%- include('includes/end.ejs') %>
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6 text-center">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h1 class="text-danger mb-4">
+                                <i class="bi bi-exclamation-triangle-fill"></i> 
+                                Server Error
+                            </h1>
+                            <p class="lead text-muted">
+                                We're sorry, but something went wrong on our end. Our team has been notified and we're working to fix the issue.
+                            </p>
+                            <hr>
+                            <div class="mt-4">
+                                <a href="/" class="btn btn-primary me-2">
+                                    <i class="bi bi-house-fill"></i> Return Home
+                                </a>
+                                <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Go Back
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <%- include('includes/end.ejs') %>
+    </body>
+</html>

@@ -23,3 +23,58 @@
   margin: 0;
 }
 
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1;
+    border-radius: 0.2rem;
+    min-width: 30px;
+}
+
+.quantity-display {
+    min-width: 2rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+.item-price {
+    font-size: 0.95rem;
+}
+
+.delete-item-btn {
+    transition: all 0.2s ease;
+}
+
+.delete-item-btn:hover {
+    transform: scale(1.1);
+}
+
+#cart-items .list-group-item {
+    transition: background-color 0.3s ease;
+}
+
+#cart-items .list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.quantity-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Animation for quantity changes */
+.quantity-display {
+    transition: all 0.2s ease;
+}
+
+.quantity-display.updating {
+    transform: scale(1.2);
+    color: #0d6efd;
+}
+
