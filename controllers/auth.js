@@ -36,49 +36,54 @@ exports.postLogin = (req, res, next) => {
             path: "/login",
             pageTitle: "Login",
             errorMessage: errors.array()[0].msg,
-            successMessage: null,
             oldInput: { email, password },
-            validationErrors: errors.array()
+            validationErrors: errors.array(),
         });
     }
 
-    User.findOne({ email })
-        .then(user => {
+    User.findOne({ email: email })
+        .then((user) => {
             if (!user) {
                 return res.status(422).render("auth/login", {
                     path: "/login",
                     pageTitle: "Login",
+                    errorMessage: "Invalid email or password.",
                     oldInput: { email, password },
                     validationErrors: [],
-                    errorMessage: "Invalid email or password.",
-                    successMessage: null
                 });
             }
-
-            return bcrypt.compare(password, user.password)
-                .then(doMatch => {
+            bcrypt
+                .compare(password, user.password)
+                .then((doMatch) => {
                     if (doMatch) {
                         req.session.isLoggedIn = true;
                         req.session.user = user;
-                        return req.session.save(err => {
+                        return req.session.save((err) => {
                             if (err) {
-                                return next(err);
+                                console.log(err);
                             }
-                            res.redirect("/");
+                            // Redirect to dashboard if admin, otherwise to home
+                            if (user.isAdmin) {
+                                res.redirect("/admin/dashboard");
+                            } else {
+                                res.redirect("/");
+                            }
                         });
                     }
-
                     return res.status(422).render("auth/login", {
                         path: "/login",
                         pageTitle: "Login",
                         errorMessage: "Invalid email or password.",
-                        successMessage: null,
                         oldInput: { email, password },
-                        validationErrors: []
+                        validationErrors: [],
                     });
+                })
+                .catch((err) => {
+                    console.log(err);
+                    res.redirect("/login");
                 });
         })
-        .catch(err => {
+        .catch((err) => {
             const error = new Error(err);
             error.httpStatusCode = 500;
             return next(error);
@@ -157,7 +162,7 @@ exports.postReset = (req, res, next) => {
                     subject: "Password Reset",
                     html: `
                         <h1>Password Reset Request</h1>
-                        <p>Click this <a href="https://frightened-imogen-iti0211-e79b0a9d.koyeb.app/reset/${token}">link</a> to reset your password.</p>
+                        <p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to reset your password.</p>
                         <p>This link will expire in 1 hour.</p>
                     `
                 });

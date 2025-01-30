@@ -1,56 +1,69 @@
 <%- include('../includes/head.ejs') %>
-</head>
-<body>
-    <%- include('../includes/navigation.ejs') %>
-    <div class="container mt-4">
-        <% if (orders.length <= 0) { %>
-            <div class="alert alert-info text-center">Nothing there!</div>
-        <% } else { %>
-            <div class="accordion" id="ordersAccordion">
-                <% orders.forEach((order, index) => { %>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="heading<%= index %>">
-                            <button class="accordion-button <%= index === 0 ? '' : 'collapsed' %>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>">
-                                <div class="d-flex justify-content-between w-100">
-                                    <span>Order #<%= order._id %></span>
-                                    <span class="ms-3">Total: $<%= order.totalPrice.toFixed(2) %></span>
-                                    <small class="ms-3 text-muted"><%= new Date(order.createdAt).toLocaleString() %></small>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="collapse<%= index %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>">
-                            <div class="accordion-body">
-                                <div class="mb-3 d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">Payment Status: 
-                                        <span class="badge bg-success"><%= order.paymentStatus %></span>
-                                    </small>
-                                    <a href="/orders/<%= order._id %>/invoice" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-download"></i> Download Invoice
-                                    </a>
-                                </div>
-                                <ul class="list-group">
-                                    <% order.items.forEach(item => { %>
-                                        <li class="list-group-item">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="mb-0"><%= item.product.title %></h6>
-                                                    <small class="text-muted">
-                                                        Quantity: <%= item.quantity %> × 
-                                                        $<%= item.product.price.toFixed(2) %>
-                                                    </small>
-                                                </div>
-                                                <span class="text-muted">
-                                                    $<%= (item.product.price * item.quantity).toFixed(2) %>
+    <link rel="stylesheet" href="/css/orders.css">
+    </head>
+
+    <body>
+        <%- include('../includes/navigation.ejs') %>
+        <div class="container mt-4">
+            <% if (orders.length <= 0) { %>
+                <div class="alert alert-info text-center">Nothing there!</div>
+            <% } else { %>
+                <div class="accordion" id="ordersAccordion">
+                    <% orders.forEach((order, index) => { %>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading<%= index %>">
+                                <button class="accordion-button <%= index === 0 ? '' : 'collapsed' %>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>">
+                                    <div class="d-flex justify-content-between w-100">
+                                        <span>Order #<%= order._id %></span>
+                                        <span class="ms-3">Total: $<%= order.totalPrice.toFixed(2) %></span>
+                                        <small class="ms-3 text-muted"><%= new Date(order.createdAt).toLocaleString() %></small>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse<%= index %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>">
+                                <div class="accordion-body">
+                                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted me-2">Order Status: 
+                                                <span class="badge <%= order.orderStatus === 'completed' ? 'bg-success' : 
+                                                                    order.orderStatus === 'processing' ? 'bg-warning' : 
+                                                                    order.orderStatus === 'cancelled' ? 'bg-danger' : 'bg-info' %>">
+                                                    <%= order.orderStatus %>
                                                 </span>
-                                            </div>
-                                        </li>
-                                    <% }); %>
-                                </ul>
+                                            </small>
+                                            <small class="text-muted">Payment Status: 
+                                                <span class="badge <%= order.paymentStatus === 'paid' ? 'bg-success' : 'bg-warning' %>">
+                                                    <%= order.paymentStatus %>
+                                                </span>
+                                            </small>
+                                        </div>
+                                        <a href="/orders/<%= order._id %>/invoice" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-download"></i> Download Invoice
+                                        </a>
+                                    </div>
+                                    <ul class="list-group">
+                                        <% order.items.forEach(item => { %>
+                                            <li class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-0"><%= item.product.title %></h6>
+                                                        <small class="text-muted">
+                                                            Quantity: <%= item.quantity %> × 
+                                                            $<%= item.product.price.toFixed(2) %>
+                                                        </small>
+                                                    </div>
+                                                    <span class="text-muted">
+                                                        $<%= (item.product.price * item.quantity).toFixed(2) %>
+                                                    </span>
+                                                </div>
+                                            </li>
+                                        <% }); %>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                <% }); %>
-            </div>
-        <% } %>
-    </div>
-    <%- include('../includes/end.ejs') %>
+                    <% }); %>
+                </div>
+            <% } %>
+        </div>
+        <%- include('../includes/end.ejs') %>

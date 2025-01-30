@@ -8,8 +8,8 @@ const csrf = require("csurf");
 const flash = require("connect-flash");
 const errorController = require("./controllers/error");
 const User = require("./models/user");
-const multer = require("multer");
-const fs = require("fs");
+const multer = require('multer');
+const fs = require('fs');
 require("dotenv").config({ path: "./.env" });
 
 const adminRoutes = require("./routes/admin");
@@ -26,13 +26,12 @@ const store = new MongoDBStore({
     uri: MONGODB_URI,
     collection: "sessions",
 });
-
 const csrfProtection = csrf();
 
 // Multer storage configuration
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = "temp/uploads";
+        const uploadDir = 'temp/uploads';
         // Create directory if it doesn't exist
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
@@ -40,18 +39,16 @@ const fileStorage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        cb(null, uniqueSuffix + "-" + file.originalname);
-    },
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+    }
 });
 
 // Multer file filter
 const fileFilter = (req, file, cb) => {
-    if (
-        file.mimetype === "image/png" ||
-        file.mimetype === "image/jpg" ||
-        file.mimetype === "image/jpeg"
-    ) {
+    if (file.mimetype === 'image/png' || 
+        file.mimetype === 'image/jpg' || 
+        file.mimetype === 'image/jpeg') {
         cb(null, true);
     } else {
         cb(null, false);
@@ -62,12 +59,10 @@ app.set("view engine", "ejs");
 app.set("views", "views");
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(
-    multer({
-        storage: fileStorage,
-        fileFilter: fileFilter,
-    }).single("image")
-);
+app.use(multer({ 
+    storage: fileStorage,
+    fileFilter: fileFilter 
+}).single('image'));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
     session({
@@ -79,15 +74,18 @@ app.use(
 );
 app.use(csrfProtection);
 
+
 app.use(flash());
 // Middleware to make flash messages available to all views
 app.use((req, res, next) => {
     res.locals.errorMessage = req.flash("error");
     res.locals.successMessage = req.flash("success");
     res.locals.isAuth = req.session.isLoggedIn;
+    res.locals.isAdmin = req.session.user?.isAdmin || false;
     res.locals.csrfToken = req.csrfToken();
     next();
 });
+
 
 app.use((req, res, next) => {
     if (!req.session.user) {
@@ -98,16 +96,24 @@ app.use((req, res, next) => {
             if (user) {
                 req.user = user;
                 req.session.user = user;
+                req.session.isLoggedIn = true;
+                req.session.save(err => {
+                    if (err) console.error("Error saving session:", err);
+                    next();
+                });
             } else {
-                req.user = null;
+                req.session.destroy(err => {
+                    if (err) console.error("Error destroying session:", err);
+                    next();
+                });
             }
-            next();
         })
         .catch((err) => {
             console.error("Error fetching user:", err);
             next();
         });
 });
+
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
@@ -119,7 +125,7 @@ app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
     res.redirect("/500");
-});
+})
 
 mongoose
     .connect(MONGODB_URI, {

@@ -1,0 +1,126 @@
+.sidebar {
+    position: fixed;
+    top: 56px; /* Height of Bootstrap navbar */
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 20px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    background-color: #f8f9fa;
+    overflow-y: auto;
+}
+
+.main-content {
+    margin-top: 56px; /* Match navbar height */
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #333;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    margin: 0.2rem 0.5rem;
+}
+
+.sidebar .nav-link.active {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.sidebar .nav-link:hover {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    color: #6c757d;
+}
+
+.border-left-primary {
+    border-left: .25rem solid #4e73df!important;
+}
+
+.border-left-success {
+    border-left: .25rem solid #1cc88a!important;
+}
+
+.border-left-info {
+    border-left: .25rem solid #36b9cc!important;
+}
+
+.border-left-warning {
+    border-left: .25rem solid #f6c23e!important;
+}
+
+.text-gray-300 {
+    color: #dddfeb!important;
+}
+
+.text-gray-800 {
+    color: #5a5c69!important;
+}
+
+.font-weight-bold {
+    font-weight: 700!important;
+}
+
+.text-xs {
+    font-size: .7rem;
+}
+
+.card {
+    transition: transform .2s;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.table th {
+    font-weight: 600;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+/* Dashboard specific styles */
+.dashboard-header {
+    padding: 1.5rem;
+    background: white;
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15);
+    margin-bottom: 1.5rem;
+}
+
+.stats-card {
+    padding: 1.5rem;
+    border-radius: .35rem;
+}
+
+.stats-icon {
+    font-size: 2rem;
+    opacity: 0.4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        position: static;
+        padding-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        margin-top: 0;
+    }
+
+    .navbar {
+        position: relative;
+    }
+} 

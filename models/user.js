@@ -10,6 +10,10 @@ const userSchema = new Schema({
         type: String,
         required: true,
     },
+    isAdmin: {
+        type: Boolean,
+        default: false
+    },
     resetToken: String,
     resetTokenExpiration: Date,
     cart: {
@@ -46,6 +50,7 @@ const userSchema = new Schema({
             totalPrice: { type: Number, required: true },
             paymentId: { type: String },
             paymentStatus: { type: String, default: 'completed' },
+            orderStatus: { type: String, default: 'processing' },
             createdAt: { type: Date, default: Date.now },
             userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
         },

@@ -1,0 +1,129 @@
+<%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <%- include('../includes/navigation.ejs') %>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/dashboard">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/dashboard/users">
+                                <i class="bi bi-people"></i> Users
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/admin/dashboard/orders">
+                                <i class="bi bi-cart3"></i> Orders
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/dashboard/products">
+                                <i class="bi bi-box"></i> Products
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Manage Orders</h1>
+                </div>
+
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="ordersTable" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Items</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% orders.forEach(order => { %>
+                                        <tr>
+                                            <td><%= order.orders._id %></td>
+                                            <td><%= order.userEmail %></td>
+                                            <td><%= new Date(order.orders.createdAt).toLocaleDateString() %></td>
+                                            <td>
+                                                <form action="/admin/dashboard/order/update-status/<%= order.orders._id %>" method="POST" class="d-inline">
+                                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                                        <option value="processing" <%= order.orders.orderStatus === 'processing' ? 'selected' : '' %>>Processing</option>
+                                                        <option value="shipped" <%= order.orders.orderStatus === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                                                        <option value="delivered" <%= order.orders.orderStatus === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                                                        <option value="cancelled" <%= order.orders.orderStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                                    </select>
+                                                </form>
+                                            </td>
+                                            <td>$<%= order.orders.totalPrice.toFixed(2) %></td>
+                                            <td>
+                                                <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#orderModal<%= order.orders._id %>">
+                                                    View Items (<%= order.orders.items.length %>)
+                                                </button>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="/orders/<%= order.orders._id %>/invoice" class="btn btn-primary btn-sm">
+                                                        <i class="bi bi-download"></i> Invoice
+                                                    </a>
+                                                    <form action="/admin/dashboard/order/delete/<%= order.orders._id %>" method="POST" class="d-inline ms-2"
+                                                        onsubmit="return confirm('Are you sure you want to delete this order?');">
+                                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Order Items Modal -->
+                                        <div class="modal fade" id="orderModal<%= order.orders._id %>" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Order Items</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <ul class="list-group">
+                                                            <% order.orders.items.forEach(item => { %>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <h6 class="mb-0"><%= item.product.title %></h6>
+                                                                        <small class="text-muted">
+                                                                            Quantity: <%= item.quantity %> × $<%= item.product.price.toFixed(2) %>
+                                                                        </small>
+                                                                    </div>
+                                                                    <span>$<%= (item.quantity * item.product.price).toFixed(2) %></span>
+                                                                </li>
+                                                            <% }); %>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <%- include('../includes/end.ejs') %> 

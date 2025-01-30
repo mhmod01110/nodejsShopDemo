@@ -1,0 +1,23 @@
+<%- include('includes/head.ejs') %>
+</head>
+<body>
+    <%- include('includes/navigation.ejs') %>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <div class="error-template">
+                    <h1 class="display-1 text-danger">403</h1>
+                    <h2>Access Denied!</h2>
+                    <div class="error-details mb-4">
+                        Sorry, you don't have permission to access this page.
+                    </div>
+                    <div class="error-actions">
+                        <a href="/" class="btn btn-primary btn-lg">
+                            <i class="bi bi-house"></i> Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%- include('includes/end.ejs') %> 

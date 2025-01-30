@@ -14,11 +14,22 @@
                 </li>
                 <% if (isAuth) { %>
                 <li class="nav-item">
-                    <a class="nav-link <%= path === '/cart' ? 'active' : '' %>" href="/cart">Cart</a>
+                    <a class="nav-link <%= path === '/cart' ? 'active' : '' %>" href="/cart">
+                        <i class="bi bi-cart3"></i> Cart
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <%= path === '/orders' ? 'active' : '' %>" href="/orders">Orders</a>
+                    <a class="nav-link <%= path === '/orders' ? 'active' : '' %>" href="/orders">
+                        <i class="bi bi-box"></i> Orders
+                    </a>
                 </li>
+                <% if (isAdmin) { %>
+                    <li class="nav-item">
+                        <a class="nav-link <%= path.startsWith('/admin/dashboard') ? 'active' : '' %>" href="/admin/dashboard">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                <% } %>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
                         Admin
