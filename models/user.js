@@ -14,6 +14,10 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
+    isOwner: {
+        type: Boolean,
+        default: false
+    },
     resetToken: String,
     resetTokenExpiration: Date,
     cart: {

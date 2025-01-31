@@ -1,32 +1,36 @@
 <%- include('../includes/head.ejs') %>
-<link rel="stylesheet" href="/css/dashboard.css">
+<link rel="stylesheet" href="/css/product.css">
 </head>
 <body>
     <%- include('../includes/navigation.ejs') %>
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
-            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-                <div class="position-sticky pt-3">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="position-sticky">
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link active" href="/admin/dashboard">
-                                <i class="bi bi-speedometer2"></i> Dashboard
+                            <a class="nav-link <%= path === '/admin/dashboard' ? 'active' : '' %>" href="/admin/dashboard">
+                                <i class="bi bi-speedometer2"></i>
+                                Overview
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/dashboard/users">
-                                <i class="bi bi-people"></i> Users
+                            <a class="nav-link <%= path === '/admin/dashboard/products' ? 'active' : '' %>" href="/admin/dashboard/products">
+                                <i class="bi bi-box"></i>
+                                Products
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/dashboard/orders">
-                                <i class="bi bi-cart3"></i> Orders
+                            <a class="nav-link <%= path === '/admin/dashboard/orders' ? 'active' : '' %>" href="/admin/dashboard/orders">
+                                <i class="bi bi-cart3"></i>
+                                Orders
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/dashboard/products">
-                                <i class="bi bi-box"></i> Products
+                            <a class="nav-link <%= path === '/admin/dashboard/users' ? 'active' : '' %>" href="/admin/dashboard/users">
+                                <i class="bi bi-people"></i>
+                                Users
                             </a>
                         </li>
                     </ul>
@@ -157,4 +161,7 @@
             </main>
         </div>
     </div>
-    <%- include('../includes/end.ejs') %> 
+    <%- include('../includes/end.ejs') %>
+    <script src="/js/admin.js"></script>
+</body>
+</html> 

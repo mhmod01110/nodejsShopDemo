@@ -1,34 +1,61 @@
 <%- include('../includes/head.ejs') %>
-</head>
-<body>
-    <%- include('../includes/navigation.ejs') %>
-    <div class="container mt-4">
-        <h1 class="mb-4">Admin Products</h1>
-        <% if (prods.length > 0) { %>
-            <div class="row">
-                <% for (let product of prods) { %>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <img src="<%= product.imageUrl %>" class="card-img-top" alt="<%= product.title %>">
-                            <div class="card-body">
-                                <h5 class="card-title"><%= product.title %></h5>
-                                <h6 class="card-subtitle mb-2 text-muted">$<%= product.price %></h6>
-                                <p class="card-text text-secondary"><%= product.description %></p>
-                            </div>
-                            <div class="card-footer d-flex justify-content-between">
-                                <a href="/admin/edit-product/<%= product._id %>?edit=true" class="btn btn-primary btn-sm">Edit</a>
-                                <form action="/admin/delete-product" method="POST" class="d-inline">
-                                    <input type="hidden" name="productId" value="<%= product._id %>">
-                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                    <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-                                </form>
+    <link rel="stylesheet" href="/css/product.css">
+    </head>
+
+    <body>
+        <%- include('../includes/navigation.ejs') %>
+
+        <div class="container mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 mb-0">My Products</h1>
+                <a href="/admin/add-product" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i>Add New Product
+                </a>
+            </div>
+
+            <% if (prods.length > 0) { %>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    <% for (let product of prods) { %>
+                        <div class="col">
+                            <div class="card h-100 admin-product-card">
+                                <div class="card-img-wrapper">
+                                    <img src="<%= product.imageUrl %>" class="card-img-top" alt="<%= product.title %>">
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title text-truncate"><%= product.title %></h5>
+                                    <p class="card-text"><%= product.description %></p>
+                                    <div class="price-tag mb-3">
+                                        <h6 class="mb-0">$<%= product.price.toFixed(2) %></h6>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a href="/admin/edit-product/<%= product._id %>?edit=true" 
+                                           class="btn btn-warning btn-sm flex-grow-1">
+                                           <i class="bi bi-pencil me-1"></i>Edit
+                                        </a>
+                                        <form action="/admin/delete-product" method="POST" class="flex-grow-1">
+                                            <input type="hidden" value="<%= product._id %>" name="productId">
+                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                            <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Are you sure you want to delete this product?')">
+                                                <i class="bi bi-trash me-1"></i>Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    <% } %>
+                </div>
+                <%- include('../includes/pagination.ejs') %>
+            <% } else { %>
+                <div class="alert alert-info text-center">
+                    <h4 class="alert-heading">No Products Found!</h4>
+                    <p class="mb-0">Start adding some products to your store.</p>
+                    <div class="mt-3">
+                        <a href="/admin/add-product" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-2"></i>Add Your First Product
+                        </a>
                     </div>
-                <% } %>
-            </div>
-        <% } else { %>
-            <div class="alert alert-info text-center">No Products Found!</div>
-        <% } %>
-    </div>
-    <%- include('../includes/end.ejs') %>
+                </div>
+            <% } %>
+        </div>
+        <%- include('../includes/end.ejs') %>

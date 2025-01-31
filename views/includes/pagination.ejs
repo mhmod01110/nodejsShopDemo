@@ -1,0 +1,37 @@
+<% if (lastPage > 1) { %>
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <% if (hasPreviousPage) { %>
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page=<%= previousPage %>">Previous</a>
+                </li>
+            <% } %>
+
+            <% 
+            let startPage = Math.max(currentPage - 2, 1);
+            let endPage = Math.min(startPage + 4, lastPage);
+            
+            if (endPage - startPage < 4) {
+                startPage = Math.max(endPage - 4, 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) { %>
+                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                </li>
+            <% } %>
+
+            <% if (hasNextPage) { %>
+                <li class="page-item">
+                    <a class="page-link" href="?page=<%= nextPage %>">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page=<%= lastPage %>">Last</a>
+                </li>
+            <% } %>
+        </ul>
+    </nav>
+<% } %> 

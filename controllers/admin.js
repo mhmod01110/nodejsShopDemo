@@ -86,20 +86,20 @@ exports.postAddProduct = async (req, res, next) => {
             });
         }
 
-        const product = new Product({
-            title,
-            price,
-            description,
+    const product = new Product({
+        title,
+        price,
+        description,
             imageUrl: finalImageUrl,
-            userId: req.session.user._id
-        });
+        userId: req.session.user._id
+    });
 
         await product.save();
-        res.redirect("/admin/products");
+            res.redirect("/admin/products");
     } catch (err) {
-        const error = new Error(err);
-        error.httpStatusCode = 500;
-        return next(error);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
     }
 };
 
@@ -117,9 +117,9 @@ exports.getEditProduct = async (req, res, next) => {
     try {
         const product = await Product.findById(prodId);
         
-        if (!product) {
-            return res.redirect("/");
-        }
+            if (!product) {
+                return res.redirect("/");
+            }
 
         // Check if user is authorized to edit this product (either creator or admin)
         const isCreator = product.userId.toString() === req.session.user._id.toString();
@@ -130,24 +130,24 @@ exports.getEditProduct = async (req, res, next) => {
             return res.redirect("/admin/products");
         }
 
-        res.render("admin/edit-product", {
-            pageTitle: "Edit Product",
-            path: "/admin/edit-product",
+            res.render("admin/edit-product", {
+                pageTitle: "Edit Product",
+                path: "/admin/edit-product",
             isEdit: editMode,
             product: product,
             errorMessage: null,
-            oldInput: {
-                title: product.title,
+                oldInput: {
+                    title: product.title,
                 imageUrl: product.imageUrl,
-                price: product.price,
-                description: product.description
-            },
+                    price: product.price,
+                    description: product.description
+                },
             validationErrors: []
-        });
+            });
     } catch (err) {
-        const error = new Error(err);
-        error.httpStatusCode = 500;
-        return next(error);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
     }
 };
 
@@ -221,11 +221,11 @@ exports.postEditProduct = async (req, res, next) => {
 
         await product.save();
         req.flash('success', 'Product updated successfully');
-        res.redirect("/admin/products");
+            res.redirect("/admin/products");
     } catch (err) {
-        const error = new Error(err);
-        error.httpStatusCode = 500;
-        return next(error);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
     }
 };
 
@@ -252,27 +252,42 @@ exports.postDeleteProduct = (req, res, next) => {
         });
 };
 
-exports.getProducts = (req, res, next) => {
+exports.getProducts = async (req, res, next) => {
     if (!req.session.user) {
         return res.redirect("/login");
     }
 
-    // If user is admin, show all products, otherwise show only their products
-    const query = req.session.user.isAdmin ? {} : { userId: req.session.user._id };
+    try {
+        const page = +req.query.page || 1;
+        const itemsPerPage = 6;
 
-    Product.find(query)
-        .then(products => {
+        // If user is admin, show all products, otherwise show only their products
+        const query = req.session.user.isAdmin ? {} : { userId: req.session.user._id };
+
+        // Get total count of products
+        const totalItems = await Product.countDocuments(query);
+
+        // Get products for current page
+        const products = await Product.find(query)
+            .skip((page - 1) * itemsPerPage)
+            .limit(itemsPerPage);
+
             res.render("admin/products", {
                 prods: products,
                 pageTitle: "Admin Products",
-                path: "/admin/products"
-            });
-        })
-        .catch(err => {
-            const error = new Error(err);
-            error.httpStatusCode = 500;
-            return next(error);
+            path: "/admin/products",
+            currentPage: page,
+            hasNextPage: itemsPerPage * page < totalItems,
+            hasPreviousPage: page > 1,
+            nextPage: page + 1,
+            previousPage: page - 1,
+            lastPage: Math.ceil(totalItems / itemsPerPage)
         });
+    } catch (err) {
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+    }
 };
 
 exports.deleteProduct = async (req, res, next) => {
@@ -408,12 +423,19 @@ exports.getDashboardUsers = async (req, res, next) => {
         const users = await mongoose.model('User').find()
             .select('email isAdmin orders cart');
 
+        let errorMessage = req.flash('error')[0];
+        let successMessage = req.flash('success')[0];
+        
+        // Ensure only one type of message is shown
+        if (errorMessage) successMessage = null;
+        if (successMessage) errorMessage = null;
+
         res.render('admin/dashboard-users', {
             pageTitle: 'Manage Users',
             path: '/admin/dashboard/users',
             users,
-            errorMessage: req.flash('error')[0],
-            successMessage: req.flash('success')[0]
+            errorMessage: errorMessage,
+            successMessage: successMessage
         });
     } catch (err) {
         const error = new Error(err);
@@ -467,9 +489,9 @@ exports.getDashboardOrders = async (req, res, next) => {
         });
     } catch (err) {
         console.error('Dashboard Orders Error:', err);
-        const error = new Error(err);
-        error.httpStatusCode = 500;
-        return next(error);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
     }
 };
 
@@ -503,11 +525,19 @@ exports.deleteDashboardUser = async (req, res, next) => {
 
 exports.toggleUserAdmin = async (req, res, next) => {
     try {
+        // Check if the current user is the owner
+        if (!req.session.user.isOwner) {
+            req.flash('error', 'Only the website owner can manage admin privileges');
+            req.flash('success', null); // Clear any success message
+            return res.redirect('/admin/dashboard/users');
+        }
+
         const userId = req.params.userId;
 
         // Validate userId
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             req.flash('error', 'Invalid user ID');
+            req.flash('success', null); // Clear any success message
             return res.redirect('/admin/dashboard/users');
         }
 
@@ -516,12 +546,14 @@ exports.toggleUserAdmin = async (req, res, next) => {
         
         if (!user) {
             req.flash('error', 'User not found');
+            req.flash('success', null); // Clear any success message
             return res.redirect('/admin/dashboard/users');
         }
 
-        // Don't allow admin to remove their own admin status
-        if (user._id.toString() === req.session.user._id.toString() && user.isAdmin) {
-            req.flash('error', 'You cannot remove your own admin status');
+        // Don't allow changing owner's admin status
+        if (user.isOwner) {
+            req.flash('error', 'Cannot modify owner privileges');
+            req.flash('success', null); // Clear any success message
             return res.redirect('/admin/dashboard/users');
         }
 
@@ -566,6 +598,7 @@ exports.toggleUserAdmin = async (req, res, next) => {
 
         // Flash success message
         req.flash('success', `User ${user.email} is now ${user.isAdmin ? 'an admin' : 'no longer an admin'}`);
+        req.flash('error', null); // Clear any error message
         res.redirect('/admin/dashboard/users');
     } catch (err) {
         console.error('Toggle Admin Error:', err);

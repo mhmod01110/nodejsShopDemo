@@ -79,17 +79,23 @@
                                             <td><%= user.cart ? user.cart.items.length : 0 %></td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <form action="/admin/dashboard/user/toggle-admin/<%= user._id %>" method="POST" class="d-inline">
-                                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                                        <button type="submit" class="btn btn-warning btn-sm">
-                                                            <%= user.isAdmin ? 'Remove Admin' : 'Make Admin' %>
-                                                        </button>
-                                                    </form>
-                                                    <form action="/admin/dashboard/user/delete/<%= user._id %>" method="POST" class="d-inline ms-2"
-                                                        onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                                    </form>
+                                                    <% if (isOwner) { %>
+                                                        <% if (!user.isOwner) { %>
+                                                            <form action="/admin/dashboard/user/toggle-admin/<%= user._id %>" method="POST" class="d-inline">
+                                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                                <button type="submit" class="btn btn-warning btn-sm">
+                                                                    <%= user.isAdmin ? 'Remove Admin' : 'Make Admin' %>
+                                                                </button>
+                                                            </form>
+                                                        <% } %>
+                                                    <% } %>
+                                                    <% if (isOwner || (!user.isOwner && !user.isAdmin)) { %>
+                                                        <form action="/admin/dashboard/user/delete/<%= user._id %>" method="POST" class="d-inline ms-2"
+                                                            onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                        </form>
+                                                    <% } %>
                                                 </div>
                                             </td>
                                         </tr>

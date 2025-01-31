@@ -5,20 +5,35 @@ const fs = require('fs');
 const path = require('path');
 const generateInvoice = require('../util/invoice');
 
-exports.getProducts = (req, res, next) => {
-    Product.find()
-        .then((products) => {
-            res.render("shop/product-list", {
-                prods: products,
-                pageTitle: "All Products",
-                path: "/products",
-            });
-        })
-        .catch((err) => {
-            const error = new Error(err);
-            error.httpStatusCode = 500;
-            return next(error);
+exports.getProducts = async (req, res, next) => {
+    try {
+        const page = +req.query.page || 1;
+        const itemsPerPage = 6;
+
+        // Get total count of products
+        const totalItems = await Product.countDocuments();
+
+        // Get products for current page
+        const products = await Product.find()
+            .skip((page - 1) * itemsPerPage)
+            .limit(itemsPerPage);
+
+        res.render("shop/product-list", {
+            prods: products,
+            pageTitle: "All Products",
+            path: "/products",
+            currentPage: page,
+            hasNextPage: itemsPerPage * page < totalItems,
+            hasPreviousPage: page > 1,
+            nextPage: page + 1,
+            previousPage: page - 1,
+            lastPage: Math.ceil(totalItems / itemsPerPage)
         });
+    } catch (err) {
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+    }
 };
 
 exports.getProduct = async (req, res, next) => {
@@ -54,20 +69,35 @@ exports.getProduct = async (req, res, next) => {
     }
 };
 
-exports.getIndex = (req, res, next) => {
-    Product.find()
-        .then((products) => {
-            res.render("shop/index", {
-                prods: products,
-                pageTitle: "Shop",
-                path: "/",
-            });
-        })
-        .catch((err) => {
-            const error = new Error(err);
-            error.httpStatusCode = 500;
-            return next(error);
+exports.getIndex = async (req, res, next) => {
+    try {
+        const page = +req.query.page || 1;
+        const itemsPerPage = 6;
+
+        // Get total count of products
+        const totalItems = await Product.countDocuments();
+
+        // Get products for current page
+        const products = await Product.find()
+            .skip((page - 1) * itemsPerPage)
+            .limit(itemsPerPage);
+
+        res.render("shop/index", {
+            prods: products,
+            pageTitle: "Shop",
+            path: "/",
+            currentPage: page,
+            hasNextPage: itemsPerPage * page < totalItems,
+            hasPreviousPage: page > 1,
+            nextPage: page + 1,
+            previousPage: page - 1,
+            lastPage: Math.ceil(totalItems / itemsPerPage)
         });
+    } catch (err) {
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+    }
 };
 
 exports.getCart = (req, res, next) => {
@@ -222,13 +252,21 @@ exports.getCheckout = (req, res, next) => {
         return res.redirect('/cart');
     }
 
+    let errorMessage = req.flash('error')[0];
+    let successMessage = req.flash('success')[0];
+    
+    // Ensure only one type of message is shown
+    if (errorMessage) successMessage = null;
+    if (successMessage) errorMessage = null;
+
     res.render("shop/checkout", {
         path: "/checkout",
         pageTitle: "Checkout",
         products: cart.items,
         totalPrice: cart.totalPrice,
         stripePublicKey: process.env.STRIPE_PUBLIC_KEY,
-        error: req.flash('error')[0]
+        error: errorMessage,
+        success: successMessage
     });
 };
 
@@ -239,6 +277,7 @@ exports.postCheckout = async (req, res, next) => {
 
         if (!cart || cart.items.length === 0) {
             req.flash('error', 'Your cart is empty');
+            req.flash('success', null); // Clear any success message
             return res.redirect('/checkout');
         }
 
@@ -260,9 +299,12 @@ exports.postCheckout = async (req, res, next) => {
         // If charge is successful, create order and clear cart
         await req.session.user.createOrder();
         
+        req.flash('success', 'Order placed successfully!');
+        req.flash('error', null); // Clear any error message
         res.redirect('/orders');
     } catch (err) {
         req.flash('error', err.message || 'An error occurred during checkout');
+        req.flash('success', null); // Clear any success message
         res.redirect('/checkout');
     }
 };

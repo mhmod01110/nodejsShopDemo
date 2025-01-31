@@ -6,22 +6,36 @@ const User = require("../models/user");
 const transporter = require("../util/sendMail");
 
 exports.getLogin = (req, res, next) => {
+    let errorMessage = req.flash('error')[0];
+    let successMessage = req.flash('success')[0];
+    
+    // Ensure only one type of message is shown
+    if (errorMessage) successMessage = null;
+    if (successMessage) errorMessage = null;
+
     res.render("auth/login", {
         path: "/login",
         pageTitle: "Login",
         oldInput: { email: "", password: "" },
         validationErrors: [],
-        errorMessage: null,
-        successMessage: null
+        errorMessage: errorMessage,
+        successMessage: successMessage
     });
 };
 
 exports.getSignup = (req, res, next) => {
+    let errorMessage = req.flash('error')[0];
+    let successMessage = req.flash('success')[0];
+    
+    // Ensure only one type of message is shown
+    if (errorMessage) successMessage = null;
+    if (successMessage) errorMessage = null;
+
     res.render("auth/signup", {
         path: "/signup",
         pageTitle: "Signup",
-        errorMessage: null,
-        successMessage: null,
+        errorMessage: errorMessage,
+        successMessage: successMessage,
         oldInput: { email: "", password: "", confirmPassword: "" },
         validationErrors: []
     });
@@ -36,6 +50,7 @@ exports.postLogin = (req, res, next) => {
             path: "/login",
             pageTitle: "Login",
             errorMessage: errors.array()[0].msg,
+            successMessage: null,
             oldInput: { email, password },
             validationErrors: errors.array(),
         });
@@ -48,6 +63,7 @@ exports.postLogin = (req, res, next) => {
                     path: "/login",
                     pageTitle: "Login",
                     errorMessage: "Invalid email or password.",
+                    successMessage: null,
                     oldInput: { email, password },
                     validationErrors: [],
                 });
@@ -74,6 +90,7 @@ exports.postLogin = (req, res, next) => {
                         path: "/login",
                         pageTitle: "Login",
                         errorMessage: "Invalid email or password.",
+                        successMessage: null,
                         oldInput: { email, password },
                         validationErrors: [],
                     });
@@ -162,7 +179,7 @@ exports.postReset = (req, res, next) => {
                     subject: "Password Reset",
                     html: `
                         <h1>Password Reset Request</h1>
-                        <p>Click this <a href="https://frightened-imogen-iti0211-e79b0a9d.koyeb.app/${token}">link</a> to reset your password.</p>
+                        <p>Click this <a href="https://frightened-imogen-iti0211-e79b0a9d.koyeb.app/reset/${token}">link</a> to reset your password.</p>
                         <p>This link will expire in 1 hour.</p>
                     `
                 });

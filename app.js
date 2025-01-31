@@ -16,7 +16,6 @@ const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
 
-// const MONGODB_URI = "mongodb://localhost:27017/shop";
 const MONGODB_URI = process.env.DB_URI;
 const PORT = process.env.PORT || 8080;
 
@@ -82,6 +81,7 @@ app.use((req, res, next) => {
     res.locals.successMessage = req.flash("success");
     res.locals.isAuth = req.session.isLoggedIn;
     res.locals.isAdmin = req.session.user?.isAdmin || false;
+    res.locals.isOwner = req.session.user?.isOwner || false;
     res.locals.csrfToken = req.csrfToken();
     next();
 });

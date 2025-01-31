@@ -1,29 +1,49 @@
 <%- include('../includes/head.ejs') %>
-</head>
-<body>
-    <%- include('../includes/navigation.ejs') %>
-    <div class="container mt-4">
-        <% if (prods.length > 0) { %>
-            <div class="row">
-                <% for (let product of prods) { %>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <img src="<%= product.imageUrl %>" class="card-img-top" alt="<%= product.title %>">
-                            <div class="card-body">
-                                <h5 class="card-title text-truncate"><%= product.title %></h5>
-                                <h6 class="card-subtitle mb-2 text-muted">$<%= product.price %></h6>
-                                <p class="card-text text-secondary"><%= product.description %></p>
-                                <div class="d-flex justify-content-between">
-                                    <a href="/products/<%= product._id %>" class="btn btn-primary btn-sm">Details</a>
-                                    <%- include('../includes/add-to-cart.ejs', {product: product}) %>
+    <link rel="stylesheet" href="/css/product.css">
+    </head>
+
+    <body>
+        <%- include('../includes/navigation.ejs') %>
+        <!-- Full-width Banner -->
+        <div class="banner-container">
+            <div class="banner-wrapper">
+                <img src="https://res.cloudinary.com/dzjvvmn2z/image/upload/v1738356980/shop_products/qldidpjzokjrtqoiuotk.png" 
+                     alt="Shop Logo" 
+                     class="banner-image">
+            </div>
+        </div>
+        
+        <div class="container mt-4">
+            <% if (prods.length > 0) { %>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    <% for (let product of prods) { %>
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="card-img-wrapper">
+                                    <img src="<%= product.imageUrl %>" class="card-img-top" alt="<%= product.title %>">
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title"><%= product.title %></h5>
+                                    <p class="card-text"><%= product.description %></p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">$<%= product.price.toFixed(2) %></h6>
+                                        <div class="btn-group">
+                                            <a href="/products/<%= product._id %>" class="btn btn-primary btn-sm">Details</a>
+                                            <% if (isAuth) { %>
+                                                <%- include('../includes/add-to-cart.ejs', {product: product}) %>
+                                            <% } %>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                <% } %>
-            </div>
-        <% } else { %>
-            <div class="alert alert-secondary text-center" role="alert">No Products Found!</div>
-        <% } %>
-    </div>
-    <%- include('../includes/end.ejs') %>
+                    <% } %>
+                </div>
+                <%- include('../includes/pagination.ejs') %>
+            <% } else { %>
+                <div class="alert alert-info text-center">
+                    No products found!
+                </div>
+            <% } %>
+        </div>
+        <%- include('../includes/end.ejs') %>
