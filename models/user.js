@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
+const { BaseSchema } = require('./base');
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
     email: {
         type: String,
         required: true,
+        unique: true
     },
     password: {
         type: String,
@@ -59,6 +61,35 @@ const userSchema = new Schema({
             userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
         },
     ],
+    // Base schema fields
+    created_by: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: function() {
+            return false; // Never required for users as they create themselves
+        }
+    },
+    updated_by: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: function() {
+            return false; // Never required for users as they update themselves
+        }
+    },
+    deleted_by: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+    deleted_at: {
+        type: Date,
+        default: null
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false,
+        index: true
+    }
 });
 
 userSchema.methods.addToCart = function (product) {
@@ -158,4 +189,37 @@ userSchema.methods.createOrder = function () {
     return this.save();
 };
 
-module.exports = mongoose.model("User", userSchema);
+// Add soft delete methods
+userSchema.methods.softDelete = async function(userId) {
+    this.isDeleted = true;
+    this.deleted_at = new Date();
+    this.deleted_by = userId;
+    this.updated_by = userId;
+    return this.save();
+};
+
+userSchema.methods.restore = async function(userId) {
+    this.isDeleted = false;
+    this.deleted_at = null;
+    this.deleted_by = null;
+    this.updated_by = userId;
+    return this.save();
+};
+
+// Add middleware to handle created_by and updated_by
+userSchema.pre('save', function(next) {
+    if (this.isNew) {
+        this.created_by = this._id;
+    }
+    this.updated_by = this._id;
+    next();
+});
+
+// Create a new schema that inherits from BaseSchema
+const UserSchema = new Schema({}, { collection: 'users', timestamps: true });
+UserSchema.add(userSchema);
+
+// Add the methods to the new schema
+Object.assign(UserSchema.methods, userSchema.methods);
+
+module.exports = mongoose.model("User", UserSchema);

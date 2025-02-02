@@ -16,6 +16,7 @@ const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
 
+// const MONGODB_URI = "mongodb://localhost:27017/shop";
 const MONGODB_URI = process.env.DB_URI;
 const PORT = process.env.PORT || 8080;
 
@@ -139,6 +140,3 @@ mongoose
             console.log(`Server running on port ${PORT}`);
         });
     })
-    .catch((err) => {
-        console.error("MongoDB connection error:", err);
-    });

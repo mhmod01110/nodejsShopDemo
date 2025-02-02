@@ -8,9 +8,11 @@
         <div class="container mt-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h2 mb-0">My Products</h1>
-                <a href="/admin/add-product" class="btn btn-primary">
-                    <i class="bi bi-plus-lg me-2"></i>Add New Product
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="/admin/add-product" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-2"></i>Add New Product
+                    </a>
+                </div>
             </div>
 
             <% if (prods.length > 0) { %>
@@ -26,17 +28,26 @@
                                     <p class="card-text"><%= product.description %></p>
                                     <div class="price-tag mb-3">
                                         <h6 class="mb-0">$<%= product.price.toFixed(2) %></h6>
+                                        <% if (product.isDeleted) { %>
+                                            <span class="badge bg-danger">Deleted</span>
+                                        <% } %>
                                     </div>
                                     <div class="d-flex gap-2">
-                                        <a href="/admin/edit-product/<%= product._id %>?edit=true" 
-                                           class="btn btn-warning btn-sm flex-grow-1">
-                                           <i class="bi bi-pencil me-1"></i>Edit
-                                        </a>
-                                        <form action="/admin/delete-product" method="POST" class="flex-grow-1">
-                                            <input type="hidden" value="<%= product._id %>" name="productId">
+                                        <% if (!product.isDeleted) { %>
+                                            <a href="/admin/edit-product/<%= product._id %>?edit=true" 
+                                               class="btn btn-warning btn-sm flex-grow-1">
+                                               <i class="bi bi-pencil me-1"></i>Edit
+                                            </a>
+                                        <% } %>
+                                        <form action="/admin/delete-product/<%= product._id %>" method="POST" class="flex-grow-1">
                                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                            <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Are you sure you want to delete this product?')">
-                                                <i class="bi bi-trash me-1"></i>Delete
+                                            <button type="button" class="btn <%= product.isDeleted ? 'btn-success' : 'btn-danger' %> btn-sm w-100" 
+                                                onclick="toggleProductStatus('<%= product._id %>')">
+                                                <% if (product.isDeleted) { %>
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                                                <% } else { %>
+                                                    <i class="bi bi-trash me-1"></i>Delete
+                                                <% } %>
                                             </button>
                                         </form>
                                     </div>
@@ -58,4 +69,50 @@
                 </div>
             <% } %>
         </div>
+
+        <script>
+            function toggleProductStatus(productId) {
+                const form = document.querySelector(`form[action="/admin/delete-product/${productId}"]`);
+                const csrf = form.querySelector('input[name="_csrf"]').value;
+                const button = form.querySelector('button');
+                const action = button.innerHTML.includes('Delete') ? 'delete' : 'restore';
+                
+                if (!confirm(`Are you sure you want to ${action} this product?`)) {
+                    return;
+                }
+                
+                const endpoint = action === 'delete' ? 
+                    `/admin/delete-product/${productId}` : 
+                    `/admin/restore-product/${productId}`;
+
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'CSRF-Token': csrf,
+                        'X-CSRF-Token': csrf
+                    },
+                    body: JSON.stringify({ _csrf: csrf })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || `HTTP error! status: ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.message === 'Success') {
+                        location.reload();
+                    } else {
+                        alert('Error updating product: ' + data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('Error updating product: ' + err.message);
+                });
+            }
+        </script>
         <%- include('../includes/end.ejs') %>

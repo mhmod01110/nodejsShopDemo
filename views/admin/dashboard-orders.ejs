@@ -61,7 +61,7 @@
                                             <td><%= order.userEmail %></td>
                                             <td><%= new Date(order.orders.createdAt).toLocaleDateString() %></td>
                                             <td>
-                                                <form action="/admin/dashboard/order/update-status/<%= order.orders._id %>" method="POST" class="d-inline">
+                                                <form action="/admin/dashboard/order/status/<%= order.orders._id %>" method="POST" class="d-inline">
                                                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                     <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                                                         <option value="processing" <%= order.orders.orderStatus === 'processing' ? 'selected' : '' %>>Processing</option>

@@ -7,29 +7,35 @@ const generateInvoice = require('../util/invoice');
 
 exports.getProducts = async (req, res, next) => {
     try {
-        const page = +req.query.page || 1;
+        const page = parseInt(req.query.page) || 1;
         const itemsPerPage = 6;
 
-        // Get total count of products
-        const totalItems = await Product.countDocuments();
+        // Get total count of non-deleted products
+        const totalItems = await Product.countDocuments({ isDeleted: false });
 
-        // Get products for current page
-        const products = await Product.find()
+        // Calculate pagination values
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Fetch paginated products
+        const products = await Product.find({ isDeleted: false })
             .skip((page - 1) * itemsPerPage)
-            .limit(itemsPerPage);
+            .limit(itemsPerPage)
+            .sort({ updatedAt: -1 });
 
-        res.render("shop/product-list", {
+        res.render('shop/product-list', {
             prods: products,
-            pageTitle: "All Products",
-            path: "/products",
+            pageTitle: 'All Products',
+            path: '/products',
             currentPage: page,
-            hasNextPage: itemsPerPage * page < totalItems,
+            hasNextPage: page < totalPages,
             hasPreviousPage: page > 1,
             nextPage: page + 1,
             previousPage: page - 1,
-            lastPage: Math.ceil(totalItems / itemsPerPage)
+            lastPage: totalPages,
+            itemsPerPage
         });
     } catch (err) {
+        console.error('Get Products Error:', err);
         const error = new Error(err);
         error.httpStatusCode = 500;
         return next(error);
@@ -71,29 +77,35 @@ exports.getProduct = async (req, res, next) => {
 
 exports.getIndex = async (req, res, next) => {
     try {
-        const page = +req.query.page || 1;
+        const page = parseInt(req.query.page) || 1;
         const itemsPerPage = 6;
 
-        // Get total count of products
-        const totalItems = await Product.countDocuments();
+        // Get total count of non-deleted products
+        const totalItems = await Product.countDocuments({ isDeleted: false });
 
-        // Get products for current page
-        const products = await Product.find()
+        // Calculate pagination values
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Fetch paginated products
+        const products = await Product.find({ isDeleted: false })
             .skip((page - 1) * itemsPerPage)
-            .limit(itemsPerPage);
+            .limit(itemsPerPage)
+            .sort({ updatedAt: -1 });
 
-        res.render("shop/index", {
+        res.render('shop/index', {
             prods: products,
-            pageTitle: "Shop",
-            path: "/",
+            pageTitle: 'Shop',
+            path: '/',
             currentPage: page,
-            hasNextPage: itemsPerPage * page < totalItems,
+            hasNextPage: page < totalPages,
             hasPreviousPage: page > 1,
             nextPage: page + 1,
             previousPage: page - 1,
-            lastPage: Math.ceil(totalItems / itemsPerPage)
+            lastPage: totalPages,
+            itemsPerPage
         });
     } catch (err) {
+        console.error('Get Index Error:', err);
         const error = new Error(err);
         error.httpStatusCode = 500;
         return next(error);

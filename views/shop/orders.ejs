@@ -26,9 +26,10 @@
                                     <div class="mb-3 d-flex justify-content-between align-items-center">
                                         <div>
                                             <small class="text-muted me-2">Order Status: 
-                                                <span class="badge <%= order.orderStatus === 'completed' ? 'bg-success' : 
+                                                <span class="badge <%= order.orderStatus === 'delivered' ? 'bg-success' : 
                                                                     order.orderStatus === 'processing' ? 'bg-warning' : 
-                                                                    order.orderStatus === 'cancelled' ? 'bg-danger' : 'bg-info' %>">
+                                                                    order.orderStatus === 'shipped' ? 'bg-info' :
+                                                                    order.orderStatus === 'cancelled' ? 'bg-danger' : 'bg-secondary' %>">
                                                     <%= order.orderStatus %>
                                                 </span>
                                             </small>

@@ -139,9 +139,10 @@
                                                 <td><%= order.userEmail %></td>
                                                 <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                                                 <td>
-                                                    <span class="badge bg-<%= order.orderStatus === 'completed' ? 'success' : 
+                                                    <span class="badge bg-<%= order.orderStatus === 'delivered' ? 'success' : 
                                                         order.orderStatus === 'processing' ? 'warning' :
-                                                        order.orderStatus === 'cancelled' ? 'danger' : 'info' %>">
+                                                        order.orderStatus === 'shipped' ? 'info' :
+                                                        order.orderStatus === 'cancelled' ? 'danger' : 'secondary' %>">
                                                         <%= order.orderStatus %>
                                                     </span>
                                                 </td>

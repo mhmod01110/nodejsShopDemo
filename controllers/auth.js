@@ -179,7 +179,7 @@ exports.postReset = (req, res, next) => {
                     subject: "Password Reset",
                     html: `
                         <h1>Password Reset Request</h1>
-                        <p>Click this <a href="https://frightened-imogen-iti0211-e79b0a9d.koyeb.app/reset/${token}">link</a> to reset your password.</p>
+                        <p>Click this <a href="http://https://frightened-imogen-iti0211-e79b0a9d.koyeb.app/reset/${token}">link</a> to reset your password.</p>
                         <p>This link will expire in 1 hour.</p>
                     `
                 });

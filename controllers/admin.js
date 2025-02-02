@@ -86,20 +86,23 @@ exports.postAddProduct = async (req, res, next) => {
             });
         }
 
-    const product = new Product({
-        title,
-        price,
-        description,
+        const product = new Product({
+            title,
+            price,
+            description,
             imageUrl: finalImageUrl,
-        userId: req.session.user._id
-    });
+            userId: req.session.user._id,
+            created_by: req.session.user._id,
+            updated_by: req.session.user._id
+        });
 
         await product.save();
-            res.redirect("/admin/products");
+        res.redirect("/admin/products");
     } catch (err) {
-            const error = new Error(err);
-            error.httpStatusCode = 500;
-            return next(error);
+        console.error('Error creating product:', err);
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
     }
 };
 
@@ -218,85 +221,38 @@ exports.postEditProduct = async (req, res, next) => {
         if (finalImageUrl) {
             product.imageUrl = finalImageUrl;
         }
+        
+        // Ensure created_by is set if it's missing (for existing products)
+        if (!product.created_by) {
+            product.created_by = product.userId || req.session.user._id;
+        }
+        
+        // Update the updated_by field
+        product.updated_by = req.session.user._id;
 
         await product.save();
         req.flash('success', 'Product updated successfully');
-            res.redirect("/admin/products");
+        res.redirect("/admin/products");
     } catch (err) {
-            const error = new Error(err);
-            error.httpStatusCode = 500;
-            return next(error);
-    }
-};
-
-exports.postDeleteProduct = (req, res, next) => {
-    if (!req.session.user) {
-        return res.redirect("/login");
-    }
-
-    const prodId = req.body.productId;
-    
-    // If user is admin, allow deletion of any product, otherwise only their own
-    const query = req.session.user.isAdmin 
-        ? { _id: new mongoose.Types.ObjectId(prodId) }
-        : { _id: new mongoose.Types.ObjectId(prodId), userId: req.session.user._id };
-
-    Product.deleteOne(query)
-        .then(() => {
-            res.redirect("/admin/products");
-        })
-        .catch(err => {
-            const error = new Error(err);
-            error.httpStatusCode = 500;
-            return next(error);
-        });
-};
-
-exports.getProducts = async (req, res, next) => {
-    if (!req.session.user) {
-        return res.redirect("/login");
-    }
-
-    try {
-        const page = +req.query.page || 1;
-        const itemsPerPage = 6;
-
-        // If user is admin, show all products, otherwise show only their products
-        const query = req.session.user.isAdmin ? {} : { userId: req.session.user._id };
-
-        // Get total count of products
-        const totalItems = await Product.countDocuments(query);
-
-        // Get products for current page
-        const products = await Product.find(query)
-            .skip((page - 1) * itemsPerPage)
-            .limit(itemsPerPage);
-
-            res.render("admin/products", {
-                prods: products,
-                pageTitle: "Admin Products",
-            path: "/admin/products",
-            currentPage: page,
-            hasNextPage: itemsPerPage * page < totalItems,
-            hasPreviousPage: page > 1,
-            nextPage: page + 1,
-            previousPage: page - 1,
-            lastPage: Math.ceil(totalItems / itemsPerPage)
-        });
-    } catch (err) {
+        console.error('Error updating product:', err);
         const error = new Error(err);
         error.httpStatusCode = 500;
         return next(error);
     }
 };
 
-exports.deleteProduct = async (req, res, next) => {
+exports.postDeleteProduct = async (req, res, next) => {
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
+
     try {
         const prodId = req.params.productId;
         const product = await Product.findById(prodId);
 
         if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
+            req.flash('error', 'Product not found');
+            return res.redirect("/admin/products");
         }
 
         // Check if user is authorized to delete this product (either creator or admin)
@@ -304,28 +260,147 @@ exports.deleteProduct = async (req, res, next) => {
         const isAdmin = req.session.user.isAdmin;
         
         if (!isCreator && !isAdmin) {
+            req.flash('error', 'Not authorized to delete this product');
+            return res.redirect("/admin/products");
+        }
+
+        // Soft delete the product
+        await product.softDelete(req.session.user._id);
+        req.flash('success', 'Product deleted successfully');
+        res.redirect("/admin/products");
+    } catch (err) {
+        console.error('Error deleting product:', err);
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+    }
+};
+
+exports.getProducts = async (req, res, next) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const itemsPerPage = 6; // You can adjust this number
+
+        // Get total count of non-deleted products for this user
+        const totalItems = await Product.countDocuments({ 
+            userId: req.session.user._id,
+            isDeleted: false 
+        });
+
+        // Calculate pagination values
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Fetch paginated products
+        const products = await Product.find({ 
+            userId: req.session.user._id,
+            isDeleted: false 
+        })
+        .skip((page - 1) * itemsPerPage)
+        .limit(itemsPerPage)
+        .sort({ updatedAt: -1 });
+
+        res.render('admin/products', {
+            prods: products,
+            pageTitle: 'Admin Products',
+            path: '/admin/products',
+            currentPage: page,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+            nextPage: page + 1,
+            previousPage: page - 1,
+            lastPage: totalPages,
+            itemsPerPage
+        });
+    } catch (err) {
+        console.error('Get Products Error:', err);
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+    }
+};
+
+exports.deleteProduct = async (req, res, next) => {
+    if (!req.session.user) {
+        return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    try {
+        const prodId = req.params.productId;
+        
+        // First find the product, including deleted ones
+        const product = await Product.findById(prodId);
+
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        // Check if user is authorized (either creator or admin)
+        const isCreator = product.created_by && product.created_by.toString() === req.session.user._id.toString();
+        const isAdmin = req.session.user.isAdmin;
+        
+        if (!isCreator && !isAdmin) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        // Delete image from Cloudinary if it exists
-        if (product.imageUrl && product.imageUrl.includes('cloudinary.com')) {
-            const publicId = product.imageUrl.split('/').pop().split('.')[0];
-            try {
-                await cloudinary.uploader.destroy('shop_products/' + publicId);
-            } catch (err) {
-                console.error('Error deleting image from Cloudinary:', err);
-            }
+        // For restoration, only allow admins
+        if (product.isDeleted && !isAdmin) {
+            return res.status(403).json({ message: 'Only admins can restore products' });
         }
 
-        // If user is admin, allow deletion of any product, otherwise only their own
-        const query = req.session.user.isAdmin 
-            ? { _id: prodId }
-            : { _id: prodId, userId: req.session.user._id };
+        // Update the product using findOneAndUpdate to get the updated document
+        const updateData = {
+            isDeleted: !product.isDeleted,
+            updated_by: req.session.user._id
+        };
 
-        await Product.deleteOne(query);
-        res.status(200).json({ message: 'Success' });
+        if (!product.isDeleted) {
+            // If we're deleting
+            updateData.deleted_by = req.session.user._id;
+            updateData.deleted_at = new Date();
+        } else {
+            // If we're restoring
+            updateData.$unset = { deleted_by: "", deleted_at: "" }; // Properly remove these fields
+        }
+
+        const updatedProduct = await Product.findOneAndUpdate(
+            { _id: prodId },
+            product.isDeleted ? 
+                { $set: { ...updateData }, $unset: updateData.$unset } : 
+                { $set: updateData },
+            { 
+                new: true, // Return the updated document
+                runValidators: true
+            }
+        ).populate('created_by', 'email')
+         .populate('updated_by', 'email')
+         .populate('deleted_by', 'email');
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: 'Error updating product' });
+        }
+
+        // Get updated counts using countDocuments for better performance
+        const [activeCount, deletedCount] = await Promise.all([
+            Product.countDocuments({ isDeleted: false }),
+            Product.countDocuments({ isDeleted: true })
+        ]);
+
+        return res.status(200).json({ 
+            message: 'Success',
+            isDeleted: updatedProduct.isDeleted,
+            action: updatedProduct.isDeleted ? 'deleted' : 'restored',
+            activeCount,
+            deletedCount,
+            updated_by: updatedProduct.updated_by,
+            deleted_by: updatedProduct.deleted_by,
+            deleted_at: updatedProduct.deleted_at
+        });
     } catch (err) {
-        res.status(500).json({ message: 'Deleting product failed.' });
+        console.error('Error toggling product delete status:', err);
+        return res.status(500).json({ 
+            message: 'Error updating product',
+            error: err.message 
+        });
     }
 };
 
@@ -420,8 +495,9 @@ exports.getDashboard = async (req, res, next) => {
 
 exports.getDashboardUsers = async (req, res, next) => {
     try {
-        const users = await mongoose.model('User').find()
-            .select('email isAdmin orders cart');
+        // Include deleted users in the dashboard by explicitly querying for all
+        const users = await mongoose.model('User').find({})
+            .select('email isAdmin isOwner orders cart isDeleted');
 
         let errorMessage = req.flash('error')[0];
         let successMessage = req.flash('success')[0];
@@ -497,12 +573,49 @@ exports.getDashboardOrders = async (req, res, next) => {
 
 exports.getDashboardProducts = async (req, res, next) => {
     try {
-        const products = await Product.find();
+        const page = parseInt(req.query.page) || 1;
+        const itemsPerPage = 10; // You can adjust this number
+
+        // Get total counts for both active and deleted products
+        const activeCount = await Product.countDocuments({ isDeleted: false });
+        const deletedCount = await Product.countDocuments({ isDeleted: true });
+        const totalPages = Math.ceil(activeCount / itemsPerPage);
+
+        // Fetch paginated active products and all deleted products separately
+        const [activeProducts, deletedProducts] = await Promise.all([
+            Product.find({ isDeleted: false })
+                .populate('created_by', 'email')
+                .populate('updated_by', 'email')
+                .populate('deleted_by', 'email')
+                .skip((page - 1) * itemsPerPage)
+                .limit(itemsPerPage)
+                .sort({ updatedAt: -1 })
+                .exec(),
+            
+            Product.find({ isDeleted: true })
+                .populate('created_by', 'email')
+                .populate('updated_by', 'email')
+                .populate('deleted_by', 'email')
+                .sort({ updatedAt: -1 })
+                .exec()
+        ]);
+
+        // Combine the products for rendering
+        const products = [...activeProducts, ...deletedProducts];
 
         res.render('admin/dashboard-products', {
             pageTitle: 'Manage Products',
             path: '/admin/dashboard/products',
-            products
+            products,
+            activeCount,
+            deletedCount,
+            currentPage: page,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+            nextPage: page + 1,
+            previousPage: page - 1,
+            lastPage: totalPages,
+            itemsPerPage
         });
     } catch (err) {
         const error = new Error(err);
@@ -514,7 +627,36 @@ exports.getDashboardProducts = async (req, res, next) => {
 exports.deleteDashboardUser = async (req, res, next) => {
     try {
         const userId = req.params.userId;
-        await mongoose.model('User').findByIdAndDelete(userId);
+        const user = await mongoose.model('User').findById(userId);
+        
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/admin/dashboard/users');
+        }
+
+        // Soft delete the user
+        await user.softDelete(req.session.user._id);
+        req.flash('success', 'User successfully deleted');
+        res.redirect('/admin/dashboard/users');
+    } catch (err) {
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+    }
+};
+
+exports.restoreUser = async (req, res, next) => {
+    try {
+        const userId = req.params.userId;
+        const user = await mongoose.model('User').findById(userId);
+        
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/admin/dashboard/users');
+        }
+
+        await user.restore();
+        req.flash('success', 'User successfully restored');
         res.redirect('/admin/dashboard/users');
     } catch (err) {
         const error = new Error(err);
@@ -568,6 +710,7 @@ exports.toggleUserAdmin = async (req, res, next) => {
 
         // Toggle admin status
         user.isAdmin = !user.isAdmin;
+        user.updated_by = req.session.user._id;
 
         // Use updateOne to avoid validation issues
         await mongoose.model('User').updateOne(
@@ -575,7 +718,8 @@ exports.toggleUserAdmin = async (req, res, next) => {
             { 
                 $set: { 
                     isAdmin: user.isAdmin,
-                    orders: user.orders 
+                    orders: user.orders,
+                    updated_by: req.session.user._id
                 } 
             }
         );
@@ -613,13 +757,26 @@ exports.updateOrderStatus = async (req, res, next) => {
         const { orderId } = req.params;
         const { status } = req.body;
         
+        const user = await mongoose.model('User').findOne({ 'orders._id': orderId });
+        if (!user) {
+            req.flash('error', 'Order not found');
+            return res.redirect('/admin/dashboard/orders');
+        }
+
         await mongoose.model('User').updateOne(
             { 'orders._id': orderId },
-            { $set: { 'orders.$.orderStatus': status } }
+            { 
+                $set: { 
+                    'orders.$.orderStatus': status,
+                    updated_by: req.session.user._id
+                } 
+            }
         );
         
-        res.redirect('/admin/dashboard/orders');
+        req.flash('success', 'Order status updated successfully');
+        return res.redirect('/admin/dashboard/orders');
     } catch (err) {
+        console.error('Update Order Status Error:', err);
         const error = new Error(err);
         error.httpStatusCode = 500;
         return next(error);
@@ -630,15 +787,163 @@ exports.deleteDashboardOrder = async (req, res, next) => {
     try {
         const { orderId } = req.params;
         
+        const user = await mongoose.model('User').findOne({ 'orders._id': orderId });
+        if (!user) {
+            req.flash('error', 'Order not found');
+            return res.redirect('/admin/dashboard/orders');
+        }
+
         await mongoose.model('User').updateOne(
             { 'orders._id': orderId },
-            { $pull: { orders: { _id: orderId } } }
+            { 
+                $pull: { orders: { _id: orderId } },
+                $set: { updated_by: req.session.user._id }
+            }
         );
         
+        req.flash('success', 'Order deleted successfully');
         res.redirect('/admin/dashboard/orders');
     } catch (err) {
+        console.error('Delete Order Error:', err);
         const error = new Error(err);
         error.httpStatusCode = 500;
         return next(error);
+    }
+};
+
+exports.restoreProduct = async (req, res, next) => {
+    if (!req.session.user) {
+        return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    try {
+        const prodId = req.params.productId;
+        
+        // Find the product
+        const product = await Product.findById(prodId)
+            .populate('created_by', 'email')
+            .populate('updated_by', 'email')
+            .populate('deleted_by', 'email');
+
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        // Only admins can restore products
+        if (!req.session.user.isAdmin) {
+            return res.status(403).json({ message: 'Only admins can restore products' });
+        }
+
+        // Update the product
+        const updateData = {
+            isDeleted: false,
+            updated_by: req.session.user._id,
+            $unset: { deleted_by: "", deleted_at: "" }
+        };
+
+        const updatedProduct = await Product.findOneAndUpdate(
+            { _id: prodId },
+            { $set: { isDeleted: false, updated_by: req.session.user._id }, $unset: { deleted_by: "", deleted_at: "" } },
+            { 
+                new: true,
+                runValidators: true
+            }
+        ).populate('created_by', 'email')
+         .populate('updated_by', 'email');
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: 'Error restoring product' });
+        }
+
+        // Get updated counts
+        const [activeCount, deletedCount] = await Promise.all([
+            Product.countDocuments({ isDeleted: false }),
+            Product.countDocuments({ isDeleted: true })
+        ]);
+
+        return res.status(200).json({ 
+            message: 'Success',
+            isDeleted: false,
+            action: 'restored',
+            activeCount,
+            deletedCount,
+            updated_by: updatedProduct.updated_by,
+            deleted_by: null,
+            deleted_at: null
+        });
+    } catch (err) {
+        console.error('Error restoring product:', err);
+        return res.status(500).json({ 
+            message: 'Error restoring product',
+            error: err.message 
+        });
+    }
+};
+
+exports.restoreDashboardProduct = async (req, res, next) => {
+    try {
+        const prodId = req.params.productId;
+        
+        // Find and update the product in one operation
+        const updatedProduct = await Product.findOneAndUpdate(
+            { _id: prodId },
+            { 
+                $set: { 
+                    isDeleted: false,
+                    updated_by: req.session.user._id,
+                    updatedAt: new Date()
+                },
+                $unset: { 
+                    deleted_by: 1,
+                    deleted_at: 1
+                }
+            },
+            { new: true }
+        );
+
+        if (!updatedProduct) {
+            req.flash('error', 'Product not found');
+            return res.redirect('/admin/dashboard/products');
+        }
+
+        req.flash('success', 'Product restored successfully');
+        res.redirect('/admin/dashboard/products');
+    } catch (err) {
+        console.error('Restore Product Error:', err);
+        req.flash('error', 'Error restoring product');
+        res.redirect('/admin/dashboard/products');
+    }
+};
+
+exports.deleteDashboardProduct = async (req, res, next) => {
+    try {
+        const prodId = req.params.productId;
+        
+        // Find and update the product in one operation
+        const updatedProduct = await Product.findOneAndUpdate(
+            { _id: prodId },
+            { 
+                $set: { 
+                    isDeleted: true,
+                    deleted_by: req.session.user._id,
+                    deleted_at: new Date(),
+                    updated_by: req.session.user._id,
+                    updatedAt: new Date()
+                }
+            },
+            { new: true }
+        );
+
+        if (!updatedProduct) {
+            req.flash('error', 'Product not found');
+            return res.redirect('/admin/dashboard/products');
+        }
+
+        req.flash('success', 'Product deleted successfully');
+        res.redirect('/admin/dashboard/products');
+    } catch (err) {
+        console.error('Delete Product Error:', err);
+        req.flash('error', 'Error deleting product');
+        res.redirect('/admin/dashboard/products');
     }
 };

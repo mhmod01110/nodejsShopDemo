@@ -34,22 +34,25 @@
             </nav>
 
             <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">Manage Users</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-outline-secondary" onclick="toggleDeletedUsers()">
+                            <i class="bi bi-eye"></i> Show Deleted
+                        </button>
+                    </div>
                 </div>
 
-                <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <% if (errorMessage) { %>
+                    <div class="alert alert-danger" role="alert">
                         <%= errorMessage %>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 <% } %>
 
-                <% if (typeof successMessage !== 'undefined' && successMessage) { %>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <% if (successMessage) { %>
+                    <div class="alert alert-success" role="alert">
                         <%= successMessage %>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 <% } %>
 
@@ -61,6 +64,7 @@
                                     <tr>
                                         <th>Email</th>
                                         <th>Role</th>
+                                        <th>Status</th>
                                         <th>Orders</th>
                                         <th>Cart Items</th>
                                         <th>Actions</th>
@@ -68,32 +72,51 @@
                                 </thead>
                                 <tbody>
                                     <% users.forEach(user => { %>
-                                        <tr>
+                                        <tr class="<%= user.isDeleted ? 'deleted-item d-none' : '' %>">
                                             <td><%= user.email %></td>
                                             <td>
-                                                <span class="badge bg-<%= user.isAdmin ? 'primary' : 'secondary' %>">
-                                                    <%= user.isAdmin ? 'Admin' : 'User' %>
-                                                </span>
+                                                <% if (user.isOwner) { %>
+                                                    <span class="badge bg-primary">Owner</span>
+                                                <% } else if (user.isAdmin) { %>
+                                                    <span class="badge bg-info">Admin</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-secondary">User</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (user.isDeleted) { %>
+                                                    <span class="badge bg-danger">Deleted</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-success">Active</span>
+                                                <% } %>
                                             </td>
                                             <td><%= user.orders ? user.orders.length : 0 %></td>
                                             <td><%= user.cart ? user.cart.items.length : 0 %></td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <% if (isOwner) { %>
+                                                    <% if (!user.isDeleted) { %>
                                                         <% if (!user.isOwner) { %>
                                                             <form action="/admin/dashboard/user/toggle-admin/<%= user._id %>" method="POST" class="d-inline">
                                                                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                                                <button type="submit" class="btn btn-warning btn-sm">
+                                                                <button type="submit" class="btn btn-info btn-sm">
+                                                                    <i class="bi bi-person-gear"></i>
                                                                     <%= user.isAdmin ? 'Remove Admin' : 'Make Admin' %>
                                                                 </button>
                                                             </form>
+                                                            <form action="/admin/dashboard/user/delete/<%= user._id %>" method="POST" class="d-inline ms-2">
+                                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                                <button type="submit" class="btn btn-danger btn-sm" 
+                                                                    onclick="return confirm('Are you sure you want to delete this user?')">
+                                                                    <i class="bi bi-trash"></i> Delete
+                                                                </button>
+                                                            </form>
                                                         <% } %>
-                                                    <% } %>
-                                                    <% if (isOwner || (!user.isOwner && !user.isAdmin)) { %>
-                                                        <form action="/admin/dashboard/user/delete/<%= user._id %>" method="POST" class="d-inline ms-2"
-                                                            onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                    <% } else { %>
+                                                        <form action="/admin/dashboard/user/restore/<%= user._id %>" method="POST" class="d-inline">
                                                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                            <button type="submit" class="btn btn-success btn-sm">
+                                                                <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                                            </button>
                                                         </form>
                                                     <% } %>
                                                 </div>
@@ -108,4 +131,25 @@
             </main>
         </div>
     </div>
+
+    <script>
+        let showingDeleted = false;
+
+        function toggleDeletedUsers() {
+            showingDeleted = !showingDeleted;
+            const deletedItems = document.querySelectorAll('.deleted-item');
+            deletedItems.forEach(item => {
+                if (showingDeleted) {
+                    item.classList.remove('d-none');
+                } else {
+                    item.classList.add('d-none');
+                }
+            });
+            
+            const toggleButton = document.querySelector('.btn-outline-secondary');
+            toggleButton.innerHTML = showingDeleted ? 
+                '<i class="bi bi-eye-slash"></i> Hide Deleted' : 
+                '<i class="bi bi-eye"></i> Show Deleted';
+        }
+    </script>
     <%- include('../includes/end.ejs') %> 
